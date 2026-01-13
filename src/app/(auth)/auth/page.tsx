@@ -131,7 +131,7 @@ export default function AuthForm({
               ${isSignUpMode ? 'z-0 opacity-0 pointer-events-none' : 'z-[2] opacity-100'}
             `}
           >
-            <h2 className="2xl:text-5xl xl:text-4xl lg:text-3xl md:text-3xl sm:text-2xl text-[1.4rem] text-gray-700 mb-3 font-semibold">
+            <h2 className="font-poppins 2xl:text-5xl xl:text-4xl lg:text-3xl md:text-3xl sm:text-2xl text-[1.4rem] text-gray-700 mb-3 font-semibold">
               Sign in
             </h2>
             
@@ -204,7 +204,7 @@ export default function AuthForm({
               ${isSignUpMode ? 'z-[2] opacity-100' : 'z-[1] opacity-0 pointer-events-none'}
             `}
           >
-            <h2 className="2xl:text-5xl xl:text-4xl lg:text-3xl md:text-3xl sm:text-2xl text-[1.4rem] text-gray-700 mb-3 font-semibold">
+            <h2 className="font-poppins 2xl:text-5xl xl:text-4xl lg:text-3xl md:text-3xl sm:text-2xl text-[1.4rem] text-gray-700 mb-3 font-semibold">
               Sign up
             </h2>
             
@@ -308,7 +308,7 @@ export default function AuthForm({
               <button
                 type="button"
                 onClick={() => setIsSignUpMode(true)}
-                className="border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold 2xl:w-36 2xl:h-12 2xl:text-sm xl:w-32 xl:h-11 xl:text-sm lg:w-28 lg:h-10 lg:text-xs md:w-24 md:h-9 md:text-[0.65rem]"
+                className="font-poppins border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold 2xl:w-36 2xl:h-12 2xl:text-sm xl:w-32 xl:h-11 xl:text-sm lg:w-28 lg:h-10 lg:text-xs md:w-24 md:h-9 md:text-[0.65rem]"
               >
                 Sign up
               </button>
@@ -353,7 +353,7 @@ export default function AuthForm({
               <button
                 type="button"
                 onClick={() => setIsSignUpMode(false)}
-                className="border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold 2xl:w-36 2xl:h-12 2xl:text-sm xl:w-32 xl:h-11 xl:text-sm lg:w-28 lg:h-10 lg:text-xs md:w-24 md:h-9 md:text-[0.65rem]"
+                className="font-poppins border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold 2xl:w-36 2xl:h-12 2xl:text-sm xl:w-32 xl:h-11 xl:text-sm lg:w-28 lg:h-10 lg:text-xs md:w-24 md:h-9 md:text-[0.65rem]"
               >
                 Sign in
               </button>
@@ -393,7 +393,7 @@ export default function AuthForm({
                 <button
                   type="button"
                   onClick={() => setIsSignUpMode(true)}
-                  className="border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold px-6 h-9 text-xs"
+                  className="font-poppins border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold px-6 h-9 text-xs"
                 >
                   Sign up
                 </button>
@@ -427,7 +427,7 @@ export default function AuthForm({
                 <button
                   type="button"
                   onClick={() => setIsSignUpMode(false)}
-                  className="border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold px-6 h-9 text-xs"
+                  className="font-poppins border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold px-6 h-9 text-xs"
                 >
                   Sign in
                 </button>
