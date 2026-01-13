@@ -172,7 +172,7 @@ export default function AuthForm({
             </button>
 
             <p className="py-1.5 2xl:text-base xl:text-base lg:text-sm md:text-sm sm:text-sm text-xs text-center text-gray-600 font-mono">
-              OR login with social channels
+              Or continue with social accounts
             </p>
 
             {/* Social Media Icons */}
@@ -259,7 +259,7 @@ export default function AuthForm({
             </button>
 
             <p className="py-1.5 2xl:text-base xl:text-base lg:text-sm md:text-sm sm:text-sm text-xs text-center text-gray-600 font-mono">
-              OR Signup with social channels
+              Or sign up with social accounts
             </p>
 
             {/* Social Media Icons */}
@@ -299,10 +299,10 @@ export default function AuthForm({
               `}
             >
               <h3 className="font-semibold mb-3 2xl:text-3xl xl:text-2xl lg:text-xl md:text-xl">
-                New user?
+                New to learning?
               </h3>
               <p className="py-2 leading-relaxed 2xl:text-base xl:text-[0.95rem] lg:text-sm md:text-sm mb-4">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam illum suscipit in tempora non.
+                Join thousands of learners worldwide. Access expert-led courses, interactive lessons, and earn certificates to advance your career.
               </p>
               <button
                 type="button"
@@ -343,10 +343,10 @@ export default function AuthForm({
               `}
             >
               <h3 className="font-semibold mb-3 2xl:text-3xl xl:text-2xl lg:text-xl md:text-xl">
-                One of us?
+                Already enrolled?
               </h3>
               <p className="py-2 leading-relaxed 2xl:text-base xl:text-[0.95rem] lg:text-sm md:text-sm mb-4">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam illum suscipit in tempora non.
+                Welcome back! Continue your learning journey, track your progress, and access your enrolled courses right where you left off.
               </p>
               <button
                 type="button"
@@ -383,10 +383,10 @@ export default function AuthForm({
             <div className="flex items-end justify-center gap-4 mb-4 w-full max-w-sm">
               <div className="flex-1 text-left">
                 <h3 className="font-semibold mb-2 text-base sm:text-lg text-white">
-                  New user?
+                  New to learning?
                 </h3>
                 <p className="text-[0.7rem] sm:text-xs leading-relaxed text-white/95 mb-3">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam illum suscipit in tempora non. Neque quam inventore non molestias, quod, asperiores fuga quos maxime a dolor eaque corporis nulla ab.
+                  Join thousands of learners worldwide. Access expert-led courses, interactive lessons, and earn certificates to advance your career. Start your learning journey today!
                 </p>
                 <button
                   type="button"
@@ -417,10 +417,10 @@ export default function AuthForm({
             <div className="flex items-end justify-center gap-4 mb-4 w-full max-w-sm">
               <div className="flex-1 text-left">
                 <h3 className="font-semibold mb-2 text-base sm:text-lg text-white">
-                  One of us?
+                  Already enrolled?
                 </h3>
                 <p className="text-[0.7rem] sm:text-xs leading-relaxed text-white/95 mb-3">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam illum suscipit in tempora non. Neque quam inventore non molestias, quod, asperiores fuga quos maxime a dolor eaque corporis nulla ab.
+                  Welcome back! Continue your learning journey, track your progress, and access your enrolled courses. Sign in to pick up right where you left off.
                 </p>
                 <button
                   type="button"
