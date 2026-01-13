@@ -282,11 +282,11 @@ export default function AuthForm({
           {/* Left Panel - "New user?" / "Sign up" button panel */}
           <div
             className={`
-              flex flex-col justify-around text-center z-[13] 
+              flex flex-col justify-center items-center text-center z-[13] 
               transition-all duration-900 ease-in-out
               
               ${/* Desktop padding */ ''}
-              2xl:px-[14%] xl:px-[12%] lg:px-[10%] md:px-[8%]
+              2xl:px-[8%] xl:px-[8%] lg:px-[6%] md:px-[5%]
               2xl:py-16 xl:py-14 lg:py-12 md:py-10
               
               ${isSignUpMode ? 'pointer-events-none' : 'pointer-events-auto'}
@@ -295,19 +295,20 @@ export default function AuthForm({
             <div
               className={`
                 text-white transition-all duration-900 ease-in-out
+                max-w-md w-full
                 ${isSignUpMode ? '-translate-x-[800px]' : 'translate-x-0'}
               `}
             >
-              <h3 className="font-semibold mb-3 2xl:text-3xl xl:text-2xl lg:text-xl md:text-xl">
+              <h3 className="font-semibold mb-4 2xl:text-3xl xl:text-2xl lg:text-xl md:text-lg">
                 New to learning?
               </h3>
-              <p className="py-2 leading-relaxed 2xl:text-base xl:text-[0.95rem] lg:text-sm md:text-sm mb-4">
+              <p className="py-2 leading-relaxed 2xl:text-base xl:text-sm lg:text-sm md:text-xs mb-6 px-4">
                 Join thousands of learners worldwide. Access expert-led courses, interactive lessons, and earn certificates to advance your career.
               </p>
               <button
                 type="button"
                 onClick={() => setIsSignUpMode(true)}
-                className="border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold 2xl:w-36 2xl:h-12 2xl:text-sm xl:w-32 xl:h-11 xl:text-sm lg:w-28 lg:h-10 lg:text-xs md:w-28 md:h-10 md:text-xs"
+                className="border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold 2xl:w-36 2xl:h-12 2xl:text-sm xl:w-32 xl:h-11 xl:text-sm lg:w-28 lg:h-10 lg:text-xs md:w-24 md:h-9 md:text-[0.65rem]"
               >
                 Sign up
               </button>
@@ -316,8 +317,8 @@ export default function AuthForm({
               src={loginImage}
               alt="Login illustration"
               className={`
-                w-full transition-all duration-900 ease-in-out
-                2xl:max-w-md xl:max-w-sm lg:max-w-xs md:max-w-xs
+                w-full mt-8 transition-all duration-900 ease-in-out
+                2xl:max-w-xs xl:max-w-[280px] lg:max-w-[240px] md:max-w-[200px]
                 ${isSignUpMode ? '-translate-x-[800px]' : 'translate-x-0'}
               `}
             />
@@ -326,11 +327,11 @@ export default function AuthForm({
           {/* Right Panel - "One of us?" / "Sign in" button panel */}
           <div
             className={`
-              flex flex-col justify-around text-center z-[13] 
+              flex flex-col justify-center items-center text-center z-[13] 
               transition-all duration-900 ease-in-out
               
               ${/* Desktop padding */ ''}
-              2xl:px-[14%] xl:px-[12%] lg:px-[10%] md:px-[8%]
+              2xl:px-[8%] xl:px-[8%] lg:px-[6%] md:px-[5%]
               2xl:py-16 xl:py-14 lg:py-12 md:py-10
               
               ${isSignUpMode ? 'pointer-events-auto' : 'pointer-events-none'}
@@ -339,19 +340,20 @@ export default function AuthForm({
             <div
               className={`
                 text-white transition-all duration-900 ease-in-out
+                max-w-md w-full
                 ${isSignUpMode ? 'translate-x-0' : 'translate-x-[800px]'}
               `}
             >
-              <h3 className="font-semibold mb-3 2xl:text-3xl xl:text-2xl lg:text-xl md:text-xl">
+              <h3 className="font-semibold mb-4 2xl:text-3xl xl:text-2xl lg:text-xl md:text-lg">
                 Already enrolled?
               </h3>
-              <p className="py-2 leading-relaxed 2xl:text-base xl:text-[0.95rem] lg:text-sm md:text-sm mb-4">
+              <p className="py-2 leading-relaxed 2xl:text-base xl:text-sm lg:text-sm md:text-xs mb-6 px-4">
                 Welcome back! Continue your learning journey, track your progress, and access your enrolled courses right where you left off.
               </p>
               <button
                 type="button"
                 onClick={() => setIsSignUpMode(false)}
-                className="border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold 2xl:w-36 2xl:h-12 2xl:text-sm xl:w-32 xl:h-11 xl:text-sm lg:w-28 lg:h-10 lg:text-xs md:w-28 md:h-10 md:text-xs"
+                className="border-2 border-white bg-transparent hover:bg-white hover:text-[#4481eb] rounded-full cursor-pointer text-white uppercase transition-all duration-300 font-semibold 2xl:w-36 2xl:h-12 2xl:text-sm xl:w-32 xl:h-11 xl:text-sm lg:w-28 lg:h-10 lg:text-xs md:w-24 md:h-9 md:text-[0.65rem]"
               >
                 Sign in
               </button>
@@ -360,8 +362,8 @@ export default function AuthForm({
               src={registerImage}
               alt="Register illustration"
               className={`
-                w-full transition-all duration-900 ease-in-out
-                2xl:max-w-md xl:max-w-sm lg:max-w-xs md:max-w-xs
+                w-full mt-8 transition-all duration-900 ease-in-out
+                2xl:max-w-xs xl:max-w-[280px] lg:max-w-[240px] md:max-w-[200px]
                 ${isSignUpMode ? 'translate-x-0' : 'translate-x-[800px]'}
               `}
             />
