@@ -64,7 +64,7 @@ export default function AuthForm({
           md:hidden absolute top-0 left-0 w-full z-10
           bg-gradient-to-br from-[#4481eb] to-[#04befe]
           transition-all duration-[1200ms] ease-in-out
-          ${isSignUpMode ? 'h-[30vh] -translate-y-full opacity-0' : 'h-[30vh] translate-y-0 opacity-100'}
+          ${isSignUpMode ? 'h-[28vh] -translate-y-full opacity-0' : 'h-[28vh] translate-y-0 opacity-100'}
         `}
         style={{
           clipPath: 'ellipse(150% 100% at 50% 0%)',
@@ -77,7 +77,7 @@ export default function AuthForm({
           md:hidden absolute bottom-0 left-0 w-full z-10
           bg-gradient-to-br from-[#4481eb] to-[#04befe]
           transition-all duration-[1200ms] ease-in-out
-          ${isSignUpMode ? 'h-[30vh] translate-y-0 opacity-100' : 'h-[30vh] translate-y-full opacity-0'}
+          ${isSignUpMode ? 'h-[35vh] translate-y-0 opacity-100' : 'h-[35vh] translate-y-full opacity-0'}
         `}
         style={{
           clipPath: 'ellipse(150% 100% at 50% 100%)',
@@ -107,9 +107,12 @@ export default function AuthForm({
             md:w-[65%] md:top-1/2 md:-translate-y-1/2 md:-translate-x-1/2
             ${isSignUpMode ? 'md:left-1/4' : 'md:left-3/4'}
             
-            ${/* Mobile - centered vertically */ ''}
+            ${/* Mobile - positioned higher to avoid curved sections */ ''}
             w-full left-1/2 -translate-x-1/2 px-6
-            top-1/2 -translate-y-1/2
+            ${isSignUpMode 
+              ? 'top-[40%] -translate-y-1/2' 
+              : 'top-[55%] -translate-y-1/2'
+            }
             sm:px-8
           `}
         >
@@ -128,12 +131,12 @@ export default function AuthForm({
               ${isSignUpMode ? 'z-0 opacity-0 pointer-events-none' : 'z-[2] opacity-100'}
             `}
           >
-            <h2 className="2xl:text-5xl xl:text-4xl lg:text-3xl md:text-3xl sm:text-2xl text-[1.4rem] text-gray-700 mb-4 font-semibold">
+            <h2 className="2xl:text-5xl xl:text-4xl lg:text-3xl md:text-3xl sm:text-2xl text-[1.4rem] text-gray-700 mb-3 font-semibold">
               Sign in
             </h2>
             
             {/* Username Input */}
-            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-12 my-2 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[15%_85%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
+            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-11 my-1.5 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[15%_85%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
               <div className="flex items-center justify-center">
                 <FaUser className="2xl:text-xl xl:text-lg lg:text-base md:text-base sm:text-base text-sm text-gray-400" />
               </div>
@@ -147,7 +150,7 @@ export default function AuthForm({
             </div>
 
             {/* Password Input */}
-            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-12 my-2 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[15%_85%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
+            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-11 my-1.5 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[15%_85%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
               <div className="flex items-center justify-center">
                 <FaLock className="2xl:text-xl xl:text-lg lg:text-base md:text-base sm:text-base text-sm text-gray-400" />
               </div>
@@ -163,22 +166,22 @@ export default function AuthForm({
             {/* Login Button */}
             <button
               type="submit"
-              className="bg-[#5995fd] hover:bg-[#4d84e2] border-none outline-none rounded-full cursor-pointer text-white uppercase font-semibold transition-colors duration-300 2xl:h-14 2xl:w-40 2xl:text-base xl:h-12 xl:w-36 xl:text-base lg:h-11 lg:w-32 lg:text-sm md:h-11 md:w-32 md:text-sm sm:h-11 sm:w-32 sm:text-sm h-11 w-32 text-sm my-4"
+              className="bg-[#5995fd] hover:bg-[#4d84e2] border-none outline-none rounded-full cursor-pointer text-white uppercase font-semibold transition-colors duration-300 2xl:h-14 2xl:w-40 2xl:text-base xl:h-12 xl:w-36 xl:text-base lg:h-11 lg:w-32 lg:text-sm md:h-11 md:w-32 md:text-sm sm:h-11 sm:w-32 sm:text-sm h-11 w-32 text-sm my-3 mt-4"
             >
               Login
             </button>
 
-            <p className="py-2 2xl:text-base xl:text-base lg:text-sm md:text-sm sm:text-sm text-xs text-center text-gray-600 font-mono">
+            <p className="py-1.5 2xl:text-base xl:text-base lg:text-sm md:text-sm sm:text-sm text-xs text-center text-gray-600 font-mono">
               OR login with social channels
             </p>
 
             {/* Social Media Icons */}
-            <div className="flex justify-center flex-wrap gap-3 sm:gap-2 gap-2.5 my-3">
+            <div className="flex justify-center flex-wrap gap-3 sm:gap-2 gap-2.5 my-2">
               {[FaFacebookF, FaTwitter, FaGoogle, FaGithub].map((Icon, idx) => (
                 <a
                   key={idx}
                   href="#"
-                  className="2xl:h-12 2xl:w-12 xl:h-11 xl:w-11 lg:h-10 lg:w-10 md:h-10 md:w-10 sm:h-10 sm:w-10 h-10 w-10 border border-gray-700 flex items-center justify-center rounded-full text-gray-700 2xl:text-lg xl:text-base lg:text-base md:text-base sm:text-sm text-sm transition-all duration-300 hover:text-[#4481eb] hover:border-[#4481eb] hover:bg-blue-50"
+                  className="2xl:h-12 2xl:w-12 xl:h-11 xl:w-11 lg:h-10 lg:w-10 md:h-10 md:w-10 sm:h-10 sm:w-10 h-9 w-9 border border-gray-700 flex items-center justify-center rounded-full text-gray-700 2xl:text-lg xl:text-base lg:text-base md:text-base sm:text-sm text-sm transition-all duration-300 hover:text-[#4481eb] hover:border-[#4481eb] hover:bg-blue-50"
                 >
                   <Icon />
                 </a>
@@ -201,12 +204,12 @@ export default function AuthForm({
               ${isSignUpMode ? 'z-[2] opacity-100' : 'z-[1] opacity-0 pointer-events-none'}
             `}
           >
-            <h2 className="2xl:text-5xl xl:text-4xl lg:text-3xl md:text-3xl sm:text-2xl text-[1.4rem] text-gray-700 mb-4 font-semibold">
+            <h2 className="2xl:text-5xl xl:text-4xl lg:text-3xl md:text-3xl sm:text-2xl text-[1.4rem] text-gray-700 mb-3 font-semibold">
               Sign up
             </h2>
             
             {/* Username Input */}
-            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-12 my-2 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[15%_85%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
+            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-11 my-1.5 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[15%_85%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
               <div className="flex items-center justify-center">
                 <FaUser className="2xl:text-xl xl:text-lg lg:text-base md:text-base sm:text-base text-sm text-gray-400" />
               </div>
@@ -220,7 +223,7 @@ export default function AuthForm({
             </div>
 
             {/* Email Input */}
-            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-12 my-2 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[15%_85%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
+            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-11 my-1.5 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[15%_85%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
               <div className="flex items-center justify-center">
                 <FaEnvelope className="2xl:text-xl xl:text-lg lg:text-base md:text-base sm:text-base text-sm text-gray-400" />
               </div>
@@ -234,7 +237,7 @@ export default function AuthForm({
             </div>
 
             {/* Password Input */}
-            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-12 my-2 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[20%_80%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
+            <div className="w-full 2xl:max-w-[420px] xl:max-w-[380px] lg:max-w-[360px] md:max-w-[340px] sm:max-w-[320px] max-w-full bg-white 2xl:h-16 xl:h-14 lg:h-13 md:h-12 sm:h-12 h-11 my-1.5 rounded-full grid grid-cols-[15%_85%] sm:grid-cols-[20%_80%] grid-cols-[20%_80%] px-1.5 shadow-md border border-gray-100">
               <div className="flex items-center justify-center">
                 <FaLock className="2xl:text-xl xl:text-lg lg:text-base md:text-base sm:text-base text-sm text-gray-400" />
               </div>
@@ -250,22 +253,22 @@ export default function AuthForm({
             {/* Signup Button */}
             <button
               type="submit"
-              className="bg-[#5995fd] hover:bg-[#4d84e2] border-none outline-none rounded-full cursor-pointer text-white uppercase font-semibold transition-colors duration-300 2xl:h-14 2xl:w-40 2xl:text-base xl:h-12 xl:w-36 xl:text-base lg:h-11 lg:w-32 lg:text-sm md:h-11 md:w-32 md:text-sm sm:h-11 sm:w-32 sm:text-sm h-11 w-32 text-sm my-4"
+              className="bg-[#5995fd] hover:bg-[#4d84e2] border-none outline-none rounded-full cursor-pointer text-white uppercase font-semibold transition-colors duration-300 2xl:h-14 2xl:w-40 2xl:text-base xl:h-12 xl:w-36 xl:text-base lg:h-11 lg:w-32 lg:text-sm md:h-11 md:w-32 md:text-sm sm:h-11 sm:w-32 sm:text-sm h-11 w-32 text-sm my-3 mt-4"
             >
               Signup
             </button>
 
-            <p className="py-2 2xl:text-base xl:text-base lg:text-sm md:text-sm sm:text-sm text-xs text-center text-gray-600 font-mono">
+            <p className="py-1.5 2xl:text-base xl:text-base lg:text-sm md:text-sm sm:text-sm text-xs text-center text-gray-600 font-mono">
               OR Signup with social channels
             </p>
 
             {/* Social Media Icons */}
-            <div className="flex justify-center flex-wrap gap-3 sm:gap-2 gap-2.5 my-3">
+            <div className="flex justify-center flex-wrap gap-3 sm:gap-2 gap-2.5 my-2">
               {[FaFacebookF, FaTwitter, FaGoogle, FaGithub].map((Icon, idx) => (
                 <a
                   key={idx}
                   href="#"
-                  className="2xl:h-12 2xl:w-12 xl:h-11 xl:w-11 lg:h-10 lg:w-10 md:h-10 md:w-10 sm:h-10 sm:w-10 h-10 w-10 border border-gray-700 flex items-center justify-center rounded-full text-gray-700 2xl:text-lg xl:text-base lg:text-base md:text-base sm:text-sm text-sm transition-all duration-300 hover:text-[#4481eb] hover:border-[#4481eb] hover:bg-blue-50"
+                  className="2xl:h-12 2xl:w-12 xl:h-11 xl:w-11 lg:h-10 lg:w-10 md:h-10 md:w-10 sm:h-10 sm:w-10 h-9 w-9 border border-gray-700 flex items-center justify-center rounded-full text-gray-700 2xl:text-lg xl:text-base lg:text-base md:text-base sm:text-sm text-sm transition-all duration-300 hover:text-[#4481eb] hover:border-[#4481eb] hover:bg-blue-50"
                 >
                   <Icon />
                 </a>
@@ -406,12 +409,12 @@ export default function AuthForm({
             className={`
               absolute bottom-0 left-0 w-full z-[13]
               flex flex-col items-center justify-end text-center
-              px-8 pb-6 pt-4
+              px-8 pb-8 pt-4
               transition-all duration-[1200ms] ease-in-out pointer-events-auto
               ${isSignUpMode ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-20'}
             `}
           >
-            <div className="flex items-end justify-center gap-4 mb-2 w-full max-w-sm">
+            <div className="flex items-end justify-center gap-4 mb-4 w-full max-w-sm">
               <div className="flex-1 text-left">
                 <h3 className="font-semibold mb-2 text-base sm:text-lg text-white">
                   One of us?
