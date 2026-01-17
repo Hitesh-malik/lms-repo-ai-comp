@@ -23,10 +23,7 @@ export default function AddUserPage() {
 const NeumorphismButton = ({ name, icon }: { name: string; icon?: React.ReactNode }) => {
   return (
     <button
-      className="px-4 py-2 rounded-full flex items-center gap-2 text-slate-500  border border-black-700 
-      shadow-[-5px_-5px_10px_rgba(255,_255,_255,_0.8),_5px_5px_10px_rgba(0,_0,_0,_0.25)] 
-      transition-all hover:shadow-[-1px_-1px_5px_rgba(255,_255,_255,_0.6),_1px_1px_5px_rgba(0,_0,_0,_0.3),inset_-2px_-2px_5px_rgba(255,_255,_255,_1),inset_2px_2px_4px_rgba(0,_0,_0,_0.3)] 
-      hover:text-blue-500"
+      className="px-4 py-2 rounded-full flex items-center gap-2 text-slate-500 border border-black-700 shadow-[-5px_-5px_10px_rgba(255,_255,_255,_0.8),_5px_5px_10px_rgba(0,_0,_0,_0.25)] transition-all hover:shadow-[-1px_-1px_5px_rgba(255,_255,_255,_0.6),_1px_1px_5px_rgba(0,_0,_0,_0.3),inset_-2px_-2px_5px_rgba(255,_255,_255,_1),inset_2px_2px_4px_rgba(0,_0,_0,_0.3)] hover:text-blue-500"
     >
       {icon}
       <span>{name}</span>
@@ -71,7 +68,7 @@ const Table = () => {
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">
               <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 fill-gray-500 inline mr-2" fill-rule="evenodd" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 fill-gray-500 inline mr-2" fillRule="evenodd" viewBox="0 0 24 24">
                   <g transform="matrix(1.08 0 0 1.08 -.96 -.96)">
                     <path d="M11.5 20.263H2.95a.2.2 0 0 1-.2-.2v-1.45c0-.831.593-1.563 1.507-2.185 1.632-1.114 4.273-1.816 7.243-1.816a.75.75 0 0 0 0-1.5c-3.322 0-6.263.831-8.089 2.076-1.393.95-2.161 2.157-2.161 3.424v1.451a1.7 1.7 0 0 0 1.7 1.7h8.55a.75.75 0 1 0 0-1.5zm0-19.013C8.464 1.25 6 3.714 6 6.75s2.464 5.5 5.5 5.5S17 9.786 17 6.75s-2.464-5.5-5.5-5.5zm0 1.5c2.208 0 4 1.792 4 4s-1.792 4-4 4-4-1.792-4-4 1.792-4 4-4zm5.25 14.75V20a.75.75 0 0 0 1.5 0v-2.5a.75.75 0 0 0-1.5 0z" data-original="#000000" />
                     <circle cx="17.5" cy="15.25" r="1" data-original="#000000" />
