@@ -1,29 +1,36 @@
 'use client'
+import CommonModal from "@/components/Common/modal";
 import { SearchBar } from "@/components/Common/searchBar";
+import { useState } from "react";
 import { FiPlus } from "react-icons/fi";
 
 export default function AddUserPage() {
+  const [open, setOpen] = useState(false);
+  const handleOpenDrawer = () => {
+    setOpen(true);
+  };
   return (
     <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-5xl px-6 pt-10 flex flex-col gap-6 flex-wrap">
-
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-800">
             Admin page role
           </h1>
           <SearchBar placeholder="Search Something..." onSearch={() => { }} />
-          <NeumorphismButton name="Add User" icon={<FiPlus />} />
+          <NeumorphismButton name="Add User" icon={<FiPlus />} onClick={handleOpenDrawer} />
         </div>
         <Table />
       </div>
+      <CommonModal isOpen={open} setIsOpen={setOpen} />
     </main>
   );
 }
 
-const NeumorphismButton = ({ name, icon }: { name: string; icon?: React.ReactNode }) => {
+const NeumorphismButton = ({ name, icon, onClick }: { name: string; icon?: React.ReactNode; onClick: () => void }) => {
   return (
     <button
       className="px-4 py-2 rounded-full flex items-center gap-2 text-slate-500 border border-black-700 shadow-[-5px_-5px_10px_rgba(255,_255,_255,_0.8),_5px_5px_10px_rgba(0,_0,_0,_0.25)] transition-all hover:shadow-[-1px_-1px_5px_rgba(255,_255,_255,_0.6),_1px_1px_5px_rgba(0,_0,_0,_0.3),inset_-2px_-2px_5px_rgba(255,_255,_255,_1),inset_2px_2px_4px_rgba(0,_0,_0,_0.3)] hover:text-blue-500"
+      onClick={onClick}
     >
       {icon}
       <span>{name}</span>
