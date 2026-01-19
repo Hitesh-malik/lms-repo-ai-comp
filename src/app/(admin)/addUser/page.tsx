@@ -42,7 +42,7 @@ const NeumorphismButton = ({ name, icon, onClick }: { name: string; icon?: React
 
 const Table = () => {
   return (
-    <div className="overflow-x-auto">
+    <div>
       <table className="min-w-full bg-white">
         <thead className="bg-gray-50 whitespace-nowrap">
           <tr>
