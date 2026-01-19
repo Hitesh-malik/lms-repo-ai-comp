@@ -12,7 +12,7 @@ export default function CommonModal({
 }) {
   return (
     <AnimatePresence>
-      {true && (
+      {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
