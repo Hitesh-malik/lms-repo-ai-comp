@@ -11,7 +11,7 @@ export default function AddUserPage() {
   };
   return (
     <main className="min-h-screen bg-white">
-      <div className="mx-auto max-w-5xl px-6 pt-10 flex flex-col gap-6 flex-wrap">
+      <div className="px-6 pt-10 flex flex-col gap-6 flex-wrap">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-800">
             Admin page role
@@ -21,7 +21,9 @@ export default function AddUserPage() {
         </div>
         <Table />
       </div>
-      <CommonModal isOpen={open} setIsOpen={setOpen} />
+      <CommonModal isOpen={open} setIsOpen={setOpen}>
+        <div className="flex flex-col gap-4"></div>
+      </CommonModal>
     </main>
   );
 }
