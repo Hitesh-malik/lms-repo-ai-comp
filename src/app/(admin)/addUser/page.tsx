@@ -13,18 +13,13 @@ type UserRow = {
   fullName: string;
   email: string;
   role: string;
-  status: "Active" | "Inactive";
-  joinedAt: string;
-  avatarUrl?: string;
 };
 
 export default function AddUserPage() {
   const [open, setOpen] = useState(false);
 
-  // ✅ API CALL
   const { data: subAdmins, isLoading, isError, error, refetch } = useSubAdminsQuery();
 
-  // ✅ map backend data -> table rows (adjust fields based on your API response)
   const users: UserRow[] = useMemo(() => {
     if (!subAdmins) return [];
 
@@ -33,11 +28,9 @@ export default function AddUserPage() {
       fullName: u.name ?? u.fullName ?? "NA",
       email: u.email ?? u.username ?? "NA",
       role: u.role ?? "SUB_ADMIN",
-      status: (u.status ?? u.isActive ?? true) ? "Active" : "Inactive",
       joinedAt: u.createdAt
         ? new Date(u.createdAt).toLocaleString()
         : "NA",
-      avatarUrl: u.avatarUrl ?? u.profilePic ?? undefined,
     }));
   }, [subAdmins]);
 
@@ -47,11 +40,6 @@ export default function AddUserPage() {
       header: "Full Name",
       accessor: (row) => (
         <div className="flex items-center w-max">
-          <img
-            src={row.avatarUrl || "https://via.placeholder.com/36"}
-            alt={row.fullName}
-            className="w-9 h-9 rounded-full shrink-0"
-          />
           <div className="ml-2">
             <p className="text-sm font-medium text-slate-900">{row.fullName}</p>
           </div>
@@ -68,21 +56,6 @@ export default function AddUserPage() {
       ),
     },
     { key: "role", header: "Role", accessor: "role" },
-    {
-      key: "status",
-      header: "Status",
-      accessor: (row) => (
-        <span className="inline-flex items-center border border-gray-200 gap-2 px-2 py-1 rounded-lg">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              row.status === "Active" ? "bg-green-600" : "bg-gray-400"
-            }`}
-          />
-          {row.status}
-        </span>
-      ),
-    },
-    { key: "joinedAt", header: "Joined date", accessor: "joinedAt" },
   ];
 
   const handleOpenDrawer = () => setOpen(true);
@@ -95,7 +68,7 @@ export default function AddUserPage() {
             Admin page role
           </h1>
 
-          <SearchBar placeholder="Search Something..." onSearch={() => {}} />
+          <SearchBar placeholder="Search Something..." onSearch={() => { }} />
           <NeumorphismButton name="Add User" icon={<FiPlus />} onClick={handleOpenDrawer} />
         </div>
 
@@ -115,7 +88,6 @@ export default function AddUserPage() {
           </div>
         )}
 
-        {/* ✅ Table */}
         {!isLoading && !isError && (
           <DataTable<UserRow>
             title="Users"
