@@ -94,7 +94,6 @@ export default function AddUserPage() {
             columns={columns}
             data={users}
             getRowId={(row) => row.id}
-            onView={(row) => alert(`View: ${row.fullName}`)}
             onEdit={(row) => alert(`Edit: ${row.fullName}`)}
             onDelete={(row) => alert(`Delete: ${row.fullName}`)}
           />

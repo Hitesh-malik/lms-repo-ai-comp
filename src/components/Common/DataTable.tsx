@@ -1,14 +1,13 @@
-// components/DataTable.tsx
 import React from "react";
-
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 type Accessor<T> = keyof T | ((row: T) => React.ReactNode);
 
 export type Column<T> = {
-  key: string;                 // unique key for react
-  header: React.ReactNode;     // column title
-  accessor: Accessor<T>;       // which field to show OR function(row) => node
-  className?: string;          // td styles
-  headerClassName?: string;    // th styles
+  key: string;
+  header: React.ReactNode;
+  accessor: Accessor<T>;
+  className?: string;
+  headerClassName?: string;
 };
 
 type RowId<T> = (row: T, index: number) => string | number;
@@ -22,7 +21,6 @@ type DataTableProps<T> = {
   // Actions (optional)
   showActions?: boolean;
   actionsHeader?: React.ReactNode;
-  onView?: (row: T) => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
 
@@ -38,35 +36,38 @@ function getCellValue<T>(row: T, accessor: Accessor<T>) {
   return row[accessor] as React.ReactNode;
 }
 
+ 
+
 export default function DataTable<T>({
   title,
   columns,
   data,
   getRowId,
   showActions = true,
-  actionsHeader = "Action",
-  onView,
+  actionsHeader = "Actions",
   onEdit,
   onDelete,
   emptyText = "No data found",
   className = "",
 }: DataTableProps<T>) {
-  const shouldShowActions = showActions && (onView || onEdit || onDelete);
+  const shouldShowActions = showActions && (onEdit || onDelete);
 
   return (
     <div className={className}>
-      {title ? <h2 className="text-lg font-semibold text-slate-900 mb-3">{title}</h2> : null}
+      {title ? (
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">{title}</h2>
+      ) : null}
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-50 whitespace-nowrap">
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-slate-200 rounded-lg shadow-md">
+          <thead className="bg-gray-800 whitespace-nowrap">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={
                     col.headerClassName ??
-                    "px-4 py-3 text-left text-sm font-medium text-slate-600"
+                    "p-4 text-left text-sm font-medium text-white"
                   }
                 >
                   {col.header}
@@ -74,19 +75,19 @@ export default function DataTable<T>({
               ))}
 
               {shouldShowActions ? (
-                <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">
+                <th className="p-4 text-left text-sm font-medium text-white">
                   {actionsHeader}
                 </th>
               ) : null}
             </tr>
           </thead>
 
-          <tbody className="whitespace-nowrap divide-y divide-gray-200">
+          <tbody className="whitespace-nowrap">
             {data.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length + (shouldShowActions ? 1 : 0)}
-                  className="px-4 py-6 text-sm text-slate-500"
+                  className="p-4 text-[15px] text-slate-600 font-medium"
                 >
                   {emptyText}
                 </td>
@@ -96,46 +97,41 @@ export default function DataTable<T>({
                 const id = getRowId ? getRowId(row, index) : index;
 
                 return (
-                  <tr key={id} className="hover:bg-gray-50">
+                  <tr key={id} className="even:bg-blue-50">
                     {columns.map((col) => (
                       <td
                         key={col.key}
-                        className={col.className ?? "px-4 py-3 text-sm text-slate-700"}
+                        className={
+                          col.className ??
+                          "p-4 text-[15px] text-slate-600 font-medium"
+                        }
                       >
                         {getCellValue(row, col.accessor)}
                       </td>
                     ))}
 
                     {shouldShowActions ? (
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
-                          {onView ? (
-                            <button
-                              type="button"
-                              onClick={() => onView(row)}
-                              className="flex items-center gap-2 rounded-lg text-slate-700 bg-gray-50 border border-gray-200 px-3 py-1 hover:bg-gray-100"
-                            >
-                              View
-                            </button>
-                          ) : null}
-
+                      <td className="p-4">
+                        <div className="flex items-center">
                           {onEdit ? (
                             <button
                               type="button"
+                              title="Edit"
                               onClick={() => onEdit(row)}
-                              className="flex items-center gap-2 rounded-lg text-blue-600 bg-blue-50 border border-gray-200 px-3 py-1 hover:bg-blue-100"
+                              className="mr-3 cursor-pointer"
                             >
-                              Edit
+                              <IconEdit />
                             </button>
                           ) : null}
 
                           {onDelete ? (
                             <button
                               type="button"
+                              title="Delete"
                               onClick={() => onDelete(row)}
-                              className="flex items-center gap-2 rounded-lg text-red-600 bg-red-50 border border-gray-200 px-3 py-1 hover:bg-red-100"
+                              className="cursor-pointer"
                             >
-                              Delete
+                              <IconTrash />
                             </button>
                           ) : null}
                         </div>
@@ -151,4 +147,3 @@ export default function DataTable<T>({
     </div>
   );
 }
- 
