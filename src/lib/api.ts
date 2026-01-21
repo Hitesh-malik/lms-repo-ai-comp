@@ -6,7 +6,7 @@ export const api = axios.create({
   baseURL: CONFIG.apiBaseUrl,
   headers: {
     Accept: "*/*",
-    "Content-Type": "application/x-www-form-urlencoded",
+    "Content-Type": "application/json",
   },
 });
 
@@ -27,8 +27,6 @@ api.interceptors.response.use(
   (error) => {
     if (error?.response?.status === 401) {
       tokenStore.clear();
-      // optional: redirect to login
-      // window.location.href = "/auth";
     }
     return Promise.reject(error);
   }
