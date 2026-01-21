@@ -9,6 +9,7 @@ import {
   IconSettings,
   IconUserShield,
   IconUserPlus,
+  IconBook,
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,14 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
       icon: (
         <IconChartLine className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
-    },    
+    }, 
+    {
+      label: "Course Management",
+      href: "/courseManagement",
+      icon: (
+        <IconBook className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },   
     {
       label: "Settings",
       href: "#",
