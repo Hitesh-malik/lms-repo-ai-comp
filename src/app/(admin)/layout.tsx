@@ -23,20 +23,26 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
       ),
     },
     {
-      label: "Analysis",
-      href: "/profile",
-      icon: (
-        <IconChartLine className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-    },
-
-    {
-      label: "Add User",
+      label: "Sub Admin dashboard",
       href: "/addUser",
       icon: (
         <IconUserPlus className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     }, 
+    {
+      label: "Role & Permission",
+      href: "/rolePermission",
+      icon: (
+        <IconUserShield className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Analysis",
+      href: "/profile",
+      icon: (
+        <IconChartLine className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },    
     {
       label: "Settings",
       href: "#",
