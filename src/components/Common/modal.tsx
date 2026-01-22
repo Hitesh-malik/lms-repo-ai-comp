@@ -27,7 +27,6 @@ export default function CommonModal({
             onClick={(e) => e.stopPropagation()}
             className="min-h-[500px] bg-white text-white p-6 rounded-lg min-w-[500px] shadow-xl cursor-default relative overflow-hidden max-h-[90vh]"
           >
-            {/* Close button */}
             <button
               type="button"
               onClick={() => setIsOpen(false)}
