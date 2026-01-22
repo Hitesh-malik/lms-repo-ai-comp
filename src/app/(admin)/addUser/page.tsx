@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 
 import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries"; // ✅ new
+import Stepper from "@/components/Common/Stepper";
 
 type UserRow = {
   id: string;
@@ -101,7 +102,9 @@ export default function AddUserPage() {
       </div>
 
       <CommonModal isOpen={open} setIsOpen={setOpen}>
-        <div className="flex flex-col gap-4"></div>
+        <div className="flex flex-col gap-4">
+          <Stepper />
+        </div>
       </CommonModal>
     </main>
   );
