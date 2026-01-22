@@ -3,6 +3,7 @@
 import AuthForm from "@/components/auth/AuthForm";
 import { useLoginMutation, useSignupMutation } from "@/hooks/useAuthMutations";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -15,31 +16,33 @@ export default function AuthPage() {
       <AuthForm
         onSignIn={(data) =>
           login.mutate(data, {
-            onSuccess: () => router.push("/adminDashboard"),
+            onSuccess: (data) => {
+              if(data.success) {
+                toast.success(data.detail || "Login successful");
+                router.push("/adminDashboard");
+              }
+            },
+            onError: (error) => {
+              console.log("error", error);
+              toast.error((error as any).response.data.detail || "Login failed");
+            },
           })
         }
         onSignUp={(data) =>
           signup.mutate(data, {
-            onSuccess: () => {
-              // optional: after signup, switch to login page or auto-login
-              // router.push("/(auth)/auth");
+            onSuccess: (data) => {
+              if(data.success) {
+                toast.success(data.detail || "Signup successful");
+                router.push("/adminDashboard");
+              }
+            },
+            onError: (error) => {
+              console.log("error", error);
+              toast.error((error as any).response.data.detail || "Login failed");
             },
           })
         }
-      />
-
-      {/* Optional minimal UI feedback (no layout change) */}
-      {login.isPending && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg text-sm">
-          Logging in...
-        </div>
-      )}
-
-      {login.isError && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm">
-          Login failed. Check username/password.
-        </div>
-      )}
+      />    
     </>
   );
 }

@@ -8,7 +8,6 @@ interface AuthFormProps {
   onSignIn?: (data: { username: string; password: string }) => void;
   onSignUp?: (data: { username: string; email: string; password: string }) => void;
 
-  // ✅ Added for TanStack integration (optional)
   signInLoading?: boolean;
   signUpLoading?: boolean;
   signInError?: string | null;
@@ -22,7 +21,6 @@ export default function AuthForm({
   onSignIn,
   onSignUp,
 
-  // ✅ Added for TanStack integration (default values)
   signInLoading = false,
   signUpLoading = false,
   signInError = null,

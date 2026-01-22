@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, Roboto } from "next/font/google";
 import "./globals.css";
 import { TanstackProvider } from "@/components/providers/tanstack-provider";
-
+import { Toaster } from "react-hot-toast";
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -32,6 +32,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${roboto.variable} antialiased font-roboto`}>
         <TanstackProvider>
           {children}
+          <Toaster />
         </TanstackProvider>
       </body>
     </html>

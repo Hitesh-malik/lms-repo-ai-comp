@@ -10,9 +10,12 @@ import {
   IconUserShield,
   IconUserPlus,
   IconBook,
+  IconLogout,
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { logoutApi } from "@/services/authApi";
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const links = [
@@ -58,13 +61,6 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
-    {
-      label: "Logout",
-      href: "#",
-      icon: (
-        <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-    },
   ];
   const [open, setOpen] = useState(false);
   return (
@@ -86,6 +82,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
             </div>
           </div>
           <div>
+
             <SidebarLink
               link={{
                 label: "Manu Arora",

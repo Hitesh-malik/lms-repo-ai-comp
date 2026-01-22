@@ -8,6 +8,7 @@ import { FiPlus } from "react-icons/fi";
 
 import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries"; // ✅ new
 import Stepper from "@/components/Common/Stepper";
+import UserAuthForm, { UserAuthFormValues } from "@/components/Form/addUser";
 
 type UserRow = {
   id: string;
@@ -17,6 +18,41 @@ type UserRow = {
 };
 
 export default function AddUserPage() {
+  const steps = [
+    {
+      id: "basic",
+      title: "User Details",
+      content: (
+        <UserAuthForm
+          onSubmit={(values: UserAuthFormValues) => {
+            console.log("Step1 values:", values);
+            // NOTE: we won't move next automatically here,
+            // we'll control Next via stepper canNext/onNext if needed
+          }}
+        />
+      ),
+      // Example: you can block next if not valid (see Formik integration below)
+    },
+    {
+      id: "role",
+      title: "Assign Role",
+      content: (
+        <div className="text-slate-700">
+          {/* Step 2 form */}
+          Role selection UI here...
+        </div>
+      ),
+      onNext: async () => {
+        // API call before going step3
+        // await createUserRole(...)
+      },
+    },
+    {
+      id: "review",
+      title: "Review",
+      content: <div className="text-slate-700">Show summary here...</div>,
+    },
+  ];
   const [open, setOpen] = useState(false);
 
   const { data: subAdmins, isLoading, isError, error, refetch } = useSubAdminsQuery();
@@ -102,9 +138,13 @@ export default function AddUserPage() {
       </div>
 
       <CommonModal isOpen={open} setIsOpen={setOpen}>
-        <div className="flex flex-col gap-4">
-          <Stepper />
-        </div>
+        <Stepper
+          steps={steps}
+          onFinish={() => {
+            alert("All steps done!");
+            setOpen(false);
+          }}
+        />
       </CommonModal>
     </main>
   );

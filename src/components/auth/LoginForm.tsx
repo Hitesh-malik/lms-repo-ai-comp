@@ -8,7 +8,7 @@ export default function LoginForm({
   signInData,
   setSignInData,
   onSubmit,
-  loading = false, // ✅ added
+  loading = false,
 }: {
   isSignUpMode: boolean;
   signInData: { username: string; password: string };
@@ -16,7 +16,7 @@ export default function LoginForm({
     React.SetStateAction<{ username: string; password: string }>
   >;
   onSubmit: (e: React.FormEvent) => void;
-  loading?: boolean; // ✅ added
+  loading?: boolean;  
 }) {
   return (
     <form

@@ -7,6 +7,7 @@ export function useLoginMutation() {
     mutationFn: (payload: LoginReq) => loginApi(payload),
     onSuccess: (data) => {
       if (data?.access_token) tokenStore.set(data.access_token);
+      if(data.resfresh_token) tokenStore.setRefresh(data.resfresh_token);
     },
   });
 }
@@ -14,5 +15,9 @@ export function useLoginMutation() {
 export function useSignupMutation() {
   return useMutation({
     mutationFn: (payload: SignupReq) => signupApi(payload),
+    onSuccess: (data) => {
+      if (data?.access_token) tokenStore.set(data.access_token);
+      if(data.resfresh_token) tokenStore.setRefresh(data.resfresh_token);
+    },
   });
 }
