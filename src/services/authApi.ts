@@ -1,4 +1,6 @@
 import { api } from "@/lib/api";
+import { tokenStore } from "@/lib/token";
+import { CONFIG } from "@/lib/config";
 
 export type LoginReq = { username: string; password: string };
 
@@ -6,7 +8,7 @@ export type LoginRes = {
   success: boolean;
   detail : string;
   access_token?: string;
-  resfresh_token?: string;
+  refresh_token?: string;
  };
 
 // login
@@ -27,7 +29,7 @@ export type SignupRes = {
   success: boolean;
   detail : string;
   access_token?: string;
-  resfresh_token?: string;
+  refresh_token?: string;
  };
 
 export async function signupApi(payload: SignupReq): Promise<SignupRes> {
@@ -48,12 +50,29 @@ export async function logoutApi() {
   return res.data;
 }
 
-// refresh access token
-export async function refreshTokenApi(refresh_token: string) {
-  const res = await api.post("/api/v1/auth/access-token", {
-    refresh_token: refresh_token,
-  }, {
-    skipAuthRefresh: true,
+// refresh access token using fetch
+export async function refreshTokenApi() {
+  const refresh_token = tokenStore.getRefresh();
+
+  if (!refresh_token) {
+    throw new Error("No refresh token found");
+  }
+
+  const res = await fetch(`${CONFIG.apiBaseUrl}/api/v1/auth/access-token`, {
+    method: "POST",
+    headers: {
+      Accept: "*/*",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${refresh_token}`,
+    },
+    body: JSON.stringify({}),
   });
-  return res.data;
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to refresh token");
+  }
+
+  const data = await res.json();
+
+  return data;
 }

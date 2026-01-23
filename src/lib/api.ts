@@ -3,17 +3,7 @@ import { CONFIG } from "@/lib/config";
 import { tokenStore } from "@/lib/token";
 import { refreshTokenApi } from "@/services/authApi";
 
-/**
- * IMPORTANT:
- * - tokenStore should provide:
- *    - getAccess(): string | null
- *    - getRefresh(): string | null
- *    - set({ accessToken, refreshToken })
- *    - clear()
- *
- * If your current tokenStore only has get()/set(), update it accordingly.
- */
-
+ 
 export const api = axios.create({
   baseURL: CONFIG.apiBaseUrl,
   headers: {
@@ -121,18 +111,11 @@ api.interceptors.response.use(
 
     try {
       // ✅ Call refresh token API (must NOT use refresh logic itself)
-      const refreshed = await refreshTokenApi(refreshToken);
+      const refreshed = await refreshTokenApi();
 
       const newAccessToken = refreshed.access_token;
-      const newRefreshToken = refreshed.refresh_token ?? refreshToken;
 
-      // Save tokens
-      if (tokenStore.set) {
-        tokenStore.set({
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken,
-        } as any);
-      }
+       tokenStore.set(newAccessToken);
 
       processQueue(newAccessToken);
 
