@@ -93,7 +93,7 @@ export default function Stepper({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full p-8">
       {/* top step indicator */}
       <StepsHeader numSteps={totalSteps} activeIndex={active} />
 

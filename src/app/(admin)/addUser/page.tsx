@@ -9,6 +9,7 @@ import { FiPlus } from "react-icons/fi";
 import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries"; // ✅ new
 import Stepper from "@/components/Common/Stepper";
 import UserAuthForm, { UserAuthFormValues } from "@/components/Form/addUser";
+import SimpleRoleSelectForm from "@/components/Form/Simpleroleselectform";
 
 type UserRow = {
   id: string;
@@ -37,21 +38,14 @@ export default function AddUserPage() {
       id: "role",
       title: "Assign Role",
       content: (
-        <div className="text-slate-700">
-          {/* Step 2 form */}
-          Role selection UI here...
-        </div>
+        <SimpleRoleSelectForm isOpen={true} onClose={() => {}} />
       ),
       onNext: async () => {
         // API call before going step3
         // await createUserRole(...)
       },
     },
-    {
-      id: "review",
-      title: "Review",
-      content: <div className="text-slate-700">Show summary here...</div>,
-    },
+    
   ];
   const [open, setOpen] = useState(false);
 

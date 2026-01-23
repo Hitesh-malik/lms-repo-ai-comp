@@ -8,6 +8,7 @@ import { FiPlus } from "react-icons/fi";
 
 import { useRoleAndPermissionQuery } from "@/hooks/useRolePermissionQueries"; // ✅ new
 import { Role } from "@/services/roleAndPermissionApi";
+import AddRoleForm from "@/components/Form/Addroleform";
 
 export default function AddUserPage() {
   const [open, setOpen] = useState(false);
@@ -74,12 +75,8 @@ export default function AddUserPage() {
             onDelete={(row) => alert(`Delete: ${row.name}`)}
           />
         )}
-      </div>
-
-      <CommonModal isOpen={open} setIsOpen={setOpen}>
-        <div className="flex flex-col gap-4">
-        </div>
-      </CommonModal>
+      </div> 
+          <AddRoleForm isOpen={open} onClose={() => setOpen(false)} />
     </main>
   );
 }
