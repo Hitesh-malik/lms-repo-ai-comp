@@ -1,5 +1,5 @@
 import React from "react";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash, IconUser } from "@tabler/icons-react";
 type Accessor<T> = keyof T | ((row: T) => React.ReactNode);
 
 export type Column<T> = {
@@ -23,6 +23,7 @@ type DataTableProps<T> = {
   actionsHeader?: React.ReactNode;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  onRole?: (row: T) => void;
  
   emptyText?: string;
  
@@ -45,10 +46,11 @@ export default function DataTable<T>({
   actionsHeader = "Actions",
   onEdit,
   onDelete,
+  onRole,
   emptyText = "No data found",
   className = "",
 }: DataTableProps<T>) {
-  const shouldShowActions = showActions && (onEdit || onDelete);
+  const shouldShowActions = showActions && (onEdit || onDelete || onRole);
 
   return (
     <div className={className}>
@@ -110,13 +112,24 @@ export default function DataTable<T>({
 
                     {shouldShowActions ? (
                       <td className="p-4">
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-2">
+                          {onRole ? (
+                            <button
+                              type="button"
+                              title="Assign Role"
+                              onClick={() => onRole(row)}
+                              className="cursor-pointer text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              <IconUser />
+                            </button>
+                          ) : null}
+
                           {onEdit ? (
                             <button
                               type="button"
                               title="Edit"
                               onClick={() => onEdit(row)}
-                              className="mr-3 cursor-pointer"
+                              className="cursor-pointer text-slate-600 hover:text-slate-800 transition-colors"
                             >
                               <IconEdit />
                             </button>
@@ -127,7 +140,7 @@ export default function DataTable<T>({
                               type="button"
                               title="Delete"
                               onClick={() => onDelete(row)}
-                              className="cursor-pointer"
+                              className="cursor-pointer text-red-600 hover:text-red-800 transition-colors"
                             >
                               <IconTrash />
                             </button>

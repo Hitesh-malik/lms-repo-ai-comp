@@ -5,11 +5,13 @@ import CommonModal from "@/components/Common/modal";
 import { SearchBar } from "@/components/Common/searchBar";
 import { useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
+import toast from "react-hot-toast";
 
-import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries"; // ✅ new
+import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries";
 import UserAuthForm from "@/components/Form/addUser";
 import SimpleRoleSelectForm from "@/components/Form/Simpleroleselectform";
 import { useAddSubAdminMutation } from "@/hooks/useSubAdminMutations";
+import { useAssignRoleMutation } from "@/hooks/useRolePermissionMutations";
 
 type UserRow = {
   id: string;
@@ -20,8 +22,11 @@ type UserRow = {
 
 export default function AddUserPage() {
   const addSubAdminMutation = useAddSubAdminMutation();
+  const assignRoleMutation = useAssignRoleMutation();
  
   const [open, setOpen] = useState(false);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const { data: subAdmins, isLoading, isError, error, refetch } = useSubAdminsQuery();
 
@@ -65,6 +70,32 @@ export default function AddUserPage() {
 
   const handleOpenDrawer = () => setOpen(true);
 
+  const handleEditClick = (row: UserRow) => {
+    setSelectedUserId(row.id);
+    setRoleModalOpen(true);
+  };
+
+  const handleRoleAssign = async (roleId: string) => {
+    if (!selectedUserId) {
+      toast.error("No user selected");
+      return;
+    }
+
+    try {
+      await assignRoleMutation.mutateAsync({
+        user_id: selectedUserId,
+        role_id: roleId,
+      });
+      
+      toast.success("Role assigned successfully!");
+      setRoleModalOpen(false);
+      setSelectedUserId(null);
+      refetch(); // Refresh the user list
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || error?.message || "Failed to assign role");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-white">
       <div className="px-6 pt-10 flex flex-col gap-6 flex-wrap">
@@ -99,30 +130,49 @@ export default function AddUserPage() {
             columns={columns}
             data={users}
             getRowId={(row) => row.id}
-            onEdit={(row) => alert(`Edit: ${row.fullName}`)}
+            onEdit={handleEditClick}
             onDelete={(row) => alert(`Delete: ${row.fullName}`)}
           />
         )}
       </div>
 
+      {/* Add User Modal */}
       <CommonModal isOpen={open} setIsOpen={setOpen}>
          <UserAuthForm
           onSubmit={async (values, { setSubmitting, setErrors, resetForm }) => {
             try {
-              await addSubAdminMutation.mutateAsync({
+              const result = await addSubAdminMutation.mutateAsync({
                 username: values.email,
                 password: values.password,
                 name: values.username,
               });
 
+              if (result.success) {
+                toast.success(result.detail || "User created successfully");
+                setOpen(false);
+                resetForm();
+                refetch();
+              }
             } catch (error: any) {
               setErrors({
-                email: error?.message || "Failed to create user",
+                email: error?.response?.data?.detail || error?.message || "Failed to create user",
               });
             } finally {
               setSubmitting(false);
             }
           }}
+        />
+      </CommonModal>
+
+      {/* Role Assignment Modal */}
+      <CommonModal isOpen={roleModalOpen} setIsOpen={setRoleModalOpen}>
+        <SimpleRoleSelectForm
+          isOpen={roleModalOpen}
+          onClose={() => {
+            setRoleModalOpen(false);
+            setSelectedUserId(null);
+          }}
+          onSubmit={handleRoleAssign}
         />
       </CommonModal>
     </main>
