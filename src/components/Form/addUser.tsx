@@ -1,4 +1,4 @@
-import { Formik, Form } from "formik";
+import { Formik, Form, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import FormInput from "../Common/FormInput";
 
@@ -9,11 +9,18 @@ export interface UserAuthFormValues {
 }
 
 interface UserAuthFormProps {
-  onSubmit: (values: UserAuthFormValues) => void;
+  initialValues?: UserAuthFormValues | null;
+  onSubmit: (
+    values: UserAuthFormValues,
+    formikHelpers: FormikHelpers<UserAuthFormValues>
+  ) => void | Promise<void>;
 }
 
-export default function UserAuthForm({ onSubmit }: UserAuthFormProps) {
-  const initialValues: UserAuthFormValues = {
+export default function UserAuthForm({ 
+  onSubmit,
+  initialValues: initialValuesProp 
+}: UserAuthFormProps) {
+  const initialValues: UserAuthFormValues = initialValuesProp || {
     username: "",
     email: "",
     password: "",
@@ -34,6 +41,7 @@ export default function UserAuthForm({ onSubmit }: UserAuthFormProps) {
       initialValues={initialValues}
       validationSchema={validationSchema}
       onSubmit={onSubmit}
+      enableReinitialize // Important: allows form to update when initialValues change
     >
       {({ isSubmitting }) => (
         <Form className="space-y-6 max-w-md mx-auto p-4">
@@ -68,7 +76,7 @@ export default function UserAuthForm({ onSubmit }: UserAuthFormProps) {
               disabled:opacity-60
             "
           >
-            {isSubmitting ? "Submitting..." : "Submit"}
+            {isSubmitting ? "Creating User..." : "Create User"}
           </button>
         </Form>
       )}

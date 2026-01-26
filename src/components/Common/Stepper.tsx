@@ -1,39 +1,26 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useImperativeHandle, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 export type StepperStep = {
   id: string;
   title?: string;
-
-  /** UI for the step */
   content: React.ReactNode;
-
-  /** Optional: block Next if false */
   canNext?: () => boolean | Promise<boolean>;
-
-  /** Optional: run before moving to next (API call, save draft, etc.) */
   onNext?: () => void | Promise<void>;
-
-  /** Optional: run before moving to back */
   onBack?: () => void | Promise<void>;
 };
 
 type StepperProps = {
   steps: StepperStep[];
   initialStep?: number;
-
-  /** Called when you reach end and press Next */
   onFinish?: () => void | Promise<void>;
-
-  /** Optional: external control (if you want) */
   onStepChange?: (stepIndex: number) => void;
-
-  /** Button labels */
   prevLabel?: string;
   nextLabel?: string;
   finishLabel?: string;
+  stepperNextRef?: React.MutableRefObject<(() => void) | null>; // New prop
 };
 
 export default function Stepper({
@@ -44,6 +31,7 @@ export default function Stepper({
   prevLabel = "Prev",
   nextLabel = "Next",
   finishLabel = "Finish",
+  stepperNextRef,
 }: StepperProps) {
   const [active, setActive] = useState(initialStep);
   const [loading, setLoading] = useState(false);
@@ -77,7 +65,10 @@ export default function Stepper({
     setLoading(true);
     try {
       const ok = await current?.canNext?.();
-      if (ok === false) return;
+      if (ok === false) {
+        setLoading(false);
+        return;
+      }
 
       await current?.onNext?.();
 
@@ -91,6 +82,13 @@ export default function Stepper({
       setLoading(false);
     }
   };
+
+  // Expose handleNext to parent via ref
+  useEffect(() => {
+    if (stepperNextRef) {
+      stepperNextRef.current = handleNext;
+    }
+  }, [active, loading]); // Re-bind when active or loading changes
 
   return (
     <div className="w-full p-8">
@@ -140,6 +138,8 @@ export default function Stepper({
     </div>
   );
 }
+
+// StepsHeader and StepCircle components remain the same...
 
 function StepsHeader({
   numSteps,

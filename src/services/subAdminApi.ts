@@ -13,3 +13,21 @@ export async function getAllSubAdminsApi(): Promise<GetAllSubAdminsRes> {
   const res = await api.get<GetAllSubAdminsRes>("/api/v1/role/get-all-sub-admin");
   return res.data;
 }
+
+// Add Sub Admin
+export type AddSubAdminReq = {
+  username: string;
+  password: string;
+  name: string;
+};
+
+export type AddSubAdminRes = {
+  success: boolean;
+  detail: string;
+};
+
+export async function addSubAdminApi(payload: AddSubAdminReq): Promise<AddSubAdminRes> {
+  console.log("payload", payload);
+  const res = await api.post<AddSubAdminRes>("/api/v1/role/add-sub-admin", payload);
+  return res.data;
+}

@@ -7,9 +7,9 @@ import { useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 
 import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries"; // ✅ new
-import Stepper from "@/components/Common/Stepper";
-import UserAuthForm, { UserAuthFormValues } from "@/components/Form/addUser";
+import UserAuthForm from "@/components/Form/addUser";
 import SimpleRoleSelectForm from "@/components/Form/Simpleroleselectform";
+import { useAddSubAdminMutation } from "@/hooks/useSubAdminMutations";
 
 type UserRow = {
   id: string;
@@ -19,34 +19,8 @@ type UserRow = {
 };
 
 export default function AddUserPage() {
-  const steps = [
-    {
-      id: "basic",
-      title: "User Details",
-      content: (
-        <UserAuthForm
-          onSubmit={(values: UserAuthFormValues) => {
-            console.log("Step1 values:", values);
-            // NOTE: we won't move next automatically here,
-            // we'll control Next via stepper canNext/onNext if needed
-          }}
-        />
-      ),
-      // Example: you can block next if not valid (see Formik integration below)
-    },
-    {
-      id: "role",
-      title: "Assign Role",
-      content: (
-        <SimpleRoleSelectForm isOpen={true} onClose={() => {}} />
-      ),
-      onNext: async () => {
-        // API call before going step3
-        // await createUserRole(...)
-      },
-    },
-    
-  ];
+  const addSubAdminMutation = useAddSubAdminMutation();
+ 
   const [open, setOpen] = useState(false);
 
   const { data: subAdmins, isLoading, isError, error, refetch } = useSubAdminsQuery();
@@ -132,11 +106,22 @@ export default function AddUserPage() {
       </div>
 
       <CommonModal isOpen={open} setIsOpen={setOpen}>
-        <Stepper
-          steps={steps}
-          onFinish={() => {
-            alert("All steps done!");
-            setOpen(false);
+         <UserAuthForm
+          onSubmit={async (values, { setSubmitting, setErrors, resetForm }) => {
+            try {
+              await addSubAdminMutation.mutateAsync({
+                username: values.email,
+                password: values.password,
+                name: values.username,
+              });
+
+            } catch (error: any) {
+              setErrors({
+                email: error?.message || "Failed to create user",
+              });
+            } finally {
+              setSubmitting(false);
+            }
           }}
         />
       </CommonModal>

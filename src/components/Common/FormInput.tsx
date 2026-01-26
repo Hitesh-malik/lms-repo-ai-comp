@@ -30,6 +30,7 @@ export default function FormInput({
           outline-none
           text-sm
           bg-white
+          text-black
         "
       />
 

@@ -18,16 +18,14 @@ type DataTableProps<T> = {
   data: T[];
   getRowId?: RowId<T>;
 
-  // Actions (optional)
+ 
   showActions?: boolean;
   actionsHeader?: React.ReactNode;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
-
-  // Empty state
+ 
   emptyText?: string;
-
-  // Optional wrapper classes
+ 
   className?: string;
 };
 
