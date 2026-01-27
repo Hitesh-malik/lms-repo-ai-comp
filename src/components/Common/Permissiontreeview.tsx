@@ -1,79 +1,63 @@
-import { useState, useEffect, useRef } from "react";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { ChevronRight, ChevronDown, Loader2, AlertCircle } from "lucide-react";
+import { usePermissionsQuery } from "@/hooks/usePermissionQueries";
+import type { Permission } from "@/services/permissionApi";
 
-// This will be replaced with API data later
-const mockPermissionsData = [
-  {
-    id: "vp-accounting",
-    label: "VP Accounting",
-    children: [
-      { id: "1way", label: "1Way" },
-      { id: "kdb", label: "KDB" },
-      { id: "justice", label: "Justice" },
-      { id: "utilization-review", label: "Utilization Review" },
-      { id: "norton-utilities", label: "Norton Utilities" },
-    ],
-  },
-  {
-    id: "database-admin",
-    label: "Database Administrator III",
-    children: [
-      { id: "tfs", label: "TFS" },
-      { id: "overhaul", label: "Overhaul" },
-      { id: "gtk", label: "GTK" },
-      { id: "srp", label: "SRP" },
-    ],
-  },
-  {
-    id: "assistant-manager",
-    label: "Assistant Manager",
-    children: [],
-  },
-  {
-    id: "quality-engineer",
-    label: "Quality Engineer",
-    children: [],
-  },
-  {
-    id: "senior-sales",
-    label: "Senior Sales Associate",
-    children: [],
-  },
-  {
-    id: "automation-specialist",
-    label: "Automation Specialist I",
-    children: [],
-  },
-  {
-    id: "technical-writer",
-    label: "Technical Writer",
-    children: [],
-  },
-  {
-    id: "software-test-engineer",
-    label: "Software Test Engineer IV",
-    children: [],
-  },
-];
+export const GROUP_PREFIX = "group:";
 
-interface TreeNode {
+export interface TreeNode {
   id: string;
   label: string;
   children?: TreeNode[];
 }
 
+/** Build tree from flat API permissions. "permission:create" → group "permission" with child "create". */
+export function buildPermissionTree(permissions: Permission[]): TreeNode[] {
+  const topLevel: TreeNode[] = [];
+  const groupMap = new Map<string, TreeNode[]>();
+
+  for (const { id, permission } of permissions) {
+    if (permission.includes(":")) {
+      const colonIndex = permission.indexOf(":");
+      const prefix = permission.slice(0, colonIndex);
+      const suffix = permission.slice(colonIndex + 1);
+      const existing = groupMap.get(prefix) ?? [];
+      existing.push({ id, label: suffix, children: [] });
+      groupMap.set(prefix, existing);
+    } else {
+      topLevel.push({ id, label: permission, children: [] });
+    }
+  }
+
+  const groupNodes: TreeNode[] = Array.from(groupMap.entries()).map(
+    ([label, children]) => ({
+      id: `${GROUP_PREFIX}${label}`,
+      label,
+      children,
+    })
+  );
+
+  return [...topLevel, ...groupNodes];
+}
+
 interface PermissionTreeViewProps {
   selectedPermissions: Set<string>;
   setSelectedPermissions: React.Dispatch<React.SetStateAction<Set<string>>>;
-  permissionsData?: TreeNode[]; // Optional prop for API data
+  permissionsData?: TreeNode[]; // Optional override; when omitted, data comes from API
 }
 
 export default function PermissionTreeView({
   selectedPermissions,
   setSelectedPermissions,
-  permissionsData = mockPermissionsData, // Use mock data by default
+  permissionsData: permissionsDataProp,
 }: PermissionTreeViewProps) {
-  // Handle permission change for both parent and child items
+  const { data: permissions = [], isLoading, isError, error } = usePermissionsQuery();
+
+  const permissionsData = useMemo(() => {
+    if (permissionsDataProp) return permissionsDataProp;
+    return buildPermissionTree(permissions);
+  }, [permissionsDataProp, permissions]);
+
   const handlePermissionChange = (
     itemId: string,
     childrenIds: string[],
@@ -81,20 +65,48 @@ export default function PermissionTreeView({
   ) => {
     setSelectedPermissions((prev) => {
       const newSet = new Set(prev);
+      const isGroup = itemId.startsWith(GROUP_PREFIX);
 
       if (isChecked) {
-        // Add the item and all its children
-        newSet.add(itemId);
-        childrenIds.forEach((id) => newSet.add(id));
+        if (isGroup) {
+          childrenIds.forEach((id) => newSet.add(id));
+        } else {
+          newSet.add(itemId);
+          childrenIds.forEach((id) => newSet.add(id));
+        }
       } else {
-        // Remove the item and all its children
-        newSet.delete(itemId);
-        childrenIds.forEach((id) => newSet.delete(id));
+        if (isGroup) {
+          childrenIds.forEach((id) => newSet.delete(id));
+        } else {
+          newSet.delete(itemId);
+          childrenIds.forEach((id) => newSet.delete(id));
+        }
       }
 
       return newSet;
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-8 text-gray-500">
+        <Loader2 className="w-5 h-5 animate-spin" />
+        <span>Loading permissions…</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center gap-2 py-6 px-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
+        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <div>
+          <p className="font-medium">Failed to load permissions</p>
+          <p className="text-sm mt-0.5">{(error as Error)?.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1">
@@ -137,9 +149,8 @@ function TreeItem({
   const checkboxRef = useRef<HTMLInputElement>(null);
 
   const hasChildren = node.children && node.children.length > 0;
-  const childrenIds = node.children?.map((child) => child.id) || [];
+  const childrenIds = node.children?.map((child) => child.id) ?? [];
 
-  // Calculate checkbox state for parent items
   const selectedChildrenCount = childrenIds.filter((id) =>
     selectedPermissions.has(id)
   ).length;
@@ -148,27 +159,24 @@ function TreeItem({
     ? selectedChildrenCount === childrenIds.length && childrenIds.length > 0
     : selectedPermissions.has(node.id);
 
-  const isIndeterminate = hasChildren
-    ? selectedChildrenCount > 0 && selectedChildrenCount < childrenIds.length
-    : false;
+  const isIndeterminate =
+    hasChildren &&
+    selectedChildrenCount > 0 &&
+    selectedChildrenCount < childrenIds.length;
 
-  // Update indeterminate state
   useEffect(() => {
     if (checkboxRef.current) {
-      checkboxRef.current.indeterminate = isIndeterminate;
+      checkboxRef.current.indeterminate = Boolean(isIndeterminate);
     }
   }, [isIndeterminate]);
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    const checked = e.target.checked;
-    onPermissionChange(node.id, childrenIds, checked);
+    onPermissionChange(node.id, childrenIds, e.target.checked);
   };
 
   const handleToggle = () => {
-    if (hasChildren) {
-      setIsOpen(!isOpen);
-    }
+    if (hasChildren) setIsOpen((o) => !o);
   };
 
   return (
@@ -177,7 +185,6 @@ function TreeItem({
         className="flex items-center gap-2 py-2 px-2 hover:bg-white rounded transition-colors cursor-pointer"
         onClick={handleToggle}
       >
-        {/* Toggle icon - only for parents with children */}
         <div className="w-4 flex items-center justify-center flex-shrink-0">
           {hasChildren ? (
             isOpen ? (
@@ -190,7 +197,6 @@ function TreeItem({
           )}
         </div>
 
-        {/* Checkbox */}
         <input
           ref={checkboxRef}
           type="checkbox"
@@ -200,10 +206,8 @@ function TreeItem({
           className="w-4 h-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
         />
 
-        {/* Label */}
         <span className="text-sm text-gray-700 flex-1">{node.label}</span>
 
-        {/* Badge for children count */}
         {hasChildren && (
           <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
             {node.children?.length ?? 0}
@@ -211,7 +215,6 @@ function TreeItem({
         )}
       </div>
 
-      {/* Children */}
       {isOpen && hasChildren && (
         <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-2">
           {node.children?.map((child) => (
