@@ -41,3 +41,46 @@ export async function assignRoleApi(payload: AssignRoleReq): Promise<AssignRoleR
   );
   return res.data;
 }
+
+// Create Role
+export type CreateRoleReq = {
+  name: string;
+};
+
+export type CreateRoleRes = {
+  detail: string;
+  role: {
+    name: string;
+    id: string;
+  };
+};
+
+export async function createRoleApi(payload: CreateRoleReq): Promise<CreateRoleRes> {
+  const res = await api.post<CreateRoleRes>("/api/v1/role/create", payload);
+  return res.data;
+}
+
+// Update Role Permissions
+export type UpdateRolePermissionReq = {
+  name: string;
+  id: string;
+  permissions: Array<{
+    permission: string;
+    id: string;
+  }>;
+};
+
+export type UpdateRolePermissionRes = {
+  detail?: string;
+  success?: boolean;
+};
+
+export async function updateRolePermissionApi(
+  payload: UpdateRolePermissionReq
+): Promise<UpdateRolePermissionRes> {
+  const res = await api.post<UpdateRolePermissionRes>(
+    "/api/v1/role/update-permission",
+    payload
+  );
+  return res.data;
+}

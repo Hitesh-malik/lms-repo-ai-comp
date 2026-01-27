@@ -4,6 +4,11 @@ import * as Yup from "yup";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
 import PermissionTreeView from "../Common/Permissiontreeview";
+import {
+  useCreateRoleMutation,
+  useUpdateRolePermissionMutation,
+} from "@/hooks/useRolePermissionMutations";
+import { usePermissionsQuery } from "@/hooks/usePermissionQueries";
 
 // Validation schema
 const roleValidationSchema = Yup.object({
@@ -32,6 +37,10 @@ export default function AddRoleForm({
     new Set()
   );
 
+  const createRoleMutation = useCreateRoleMutation();
+  const updatePermissionMutation = useUpdateRolePermissionMutation();
+  const { data: permissions = [] } = usePermissionsQuery();
+
   const handleFormSubmit = async (
     values: { roleName: string },
     { setSubmitting, resetForm }: any
@@ -45,27 +54,63 @@ export default function AddRoleForm({
         return;
       }
 
-      const formData = {
-        roleName: values.roleName.trim(),
-        permissions: permissionsArray,
-      };
+      const roleName = values.roleName.trim();
 
-      console.log("Form Data:", formData);
+      // Step 1: Create the role
+      const createResult = await createRoleMutation.mutateAsync({
+        name: roleName,
+      });
 
-      if (onSubmit) {
-        await onSubmit(formData);
+      if (!createResult.role?.id) {
+        throw new Error("Role creation failed: No role ID returned");
       }
 
+      const roleId = createResult.role.id;
+
+      // Step 2: Map selected permission IDs to permission objects
+      // Filter out group IDs (they start with "group:") and map to API format
+      const permissionObjects = permissionsArray
+        .filter((id) => !id.startsWith("group:"))
+        .map((permissionId) => {
+          const permission = permissions.find((p) => p.id === permissionId);
+          if (!permission) {
+            throw new Error(`Permission not found for ID: ${permissionId}`);
+          }
+          return {
+            permission: permission.permission,
+            id: permission.id,
+          };
+        });
+
+      // Step 3: Update role permissions
+      await updatePermissionMutation.mutateAsync({
+        name: roleName,
+        id: roleId,
+        permissions: permissionObjects,
+      });
+
       // Success feedback
-      toast.success("Role created successfully!");
+      toast.success("Role created and permissions assigned successfully!");
+
+      // Call optional onSubmit callback if provided
+      if (onSubmit) {
+        await onSubmit({
+          roleName,
+          permissions: permissionsArray,
+        });
+      }
 
       // Reset form and close
       resetForm();
       setSelectedPermissions(new Set());
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting form:", error);
-      toast.error("Failed to create role");
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to create role";
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -163,10 +208,18 @@ export default function AddRoleForm({
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={
+                      isSubmitting ||
+                      createRoleMutation.isPending ||
+                      updatePermissionMutation.isPending
+                    }
                     className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? "Creating..." : "Create Role"}
+                    {isSubmitting ||
+                    createRoleMutation.isPending ||
+                    updatePermissionMutation.isPending
+                      ? "Creating..."
+                      : "Create Role"}
                   </button>
                 </div>
               </Form>
