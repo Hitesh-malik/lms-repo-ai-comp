@@ -2,11 +2,16 @@ import { api } from "@/lib/api";
 
 export type Course = {
   id: string;
+  slug: string;
+  thumbnail_key: string | null;
   title: string;
-  description?: string;
-  is_published?: boolean;
-  created_at?: string;
-  [key: string]: unknown;
+  type: string;
+  is_published: boolean;
+  updated_at: string;
+  description: string | null;
+  price: number | null;
+  language: string;
+  created_at: string;
 };
 
 export type GetCoursesAdminRes = Course[];

@@ -13,19 +13,28 @@ export default function CourseManagementPage() {
 
   const courseRows: Course[] = useMemo(() => {
     if (!courses) return [];
-    let list = courses.map((c: Course | Record<string, unknown>) => ({
-      id: String((c as Course).id ?? (c as Record<string, unknown>).id ?? ""),
-      title: String((c as Course).title ?? (c as Record<string, unknown>).title ?? "—"),
-      description: String((c as Course).description ?? (c as Record<string, unknown>).description ?? "—"),
-      is_published: (c as Course).is_published ?? (c as Record<string, unknown>).is_published as boolean | undefined,
-      created_at: ((c as Course).created_at ?? (c as Record<string, unknown>).created_at) as string | undefined,
+    let list = courses.map((c: Course) => ({
+      id: c.id,
+      slug: c.slug ?? "",
+      thumbnail_key: c.thumbnail_key ?? null,
+      title: c.title ?? "",
+      type: c.type ?? "",
+      is_published: c.is_published ?? false,
+      updated_at: c.updated_at ?? "",
+      description: c.description ?? null,
+      price: c.price ?? null,
+      language: c.language ?? "",
+      created_at: c.created_at ?? "",
     }));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
         (c) =>
           c.title.toLowerCase().includes(q) ||
-          (c.description ?? "").toLowerCase().includes(q)
+          (c.description ?? "").toLowerCase().includes(q) ||
+          (c.slug ?? "").toLowerCase().includes(q) ||
+          (c.type ?? "").toLowerCase().includes(q) ||
+          (c.language ?? "").toLowerCase().includes(q)
       );
     }
     return list;
@@ -39,24 +48,50 @@ export default function CourseManagementPage() {
         <div className="flex items-center w-max">
           <div className="ml-2">
             <p className="text-sm font-medium text-slate-900">{row.title}</p>
+            <p className="text-xs text-slate-500">{row.slug}</p>
           </div>
         </div>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      accessor: (row) => (
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+          {row.type}
+        </span>
       ),
     },
     {
       key: "description",
       header: "Description",
       accessor: (row) => (
-        <span className="text-slate-700 line-clamp-2 max-w-xs" title={row.description}>
+        <span className="text-slate-700 line-clamp-2 max-w-xs" title={row.description ?? ""}>
           {row.description ?? "—"}
         </span>
+      ),
+    },
+    {
+      key: "price",
+      header: "Price",
+      accessor: (row) => (
+        <span className="text-slate-900 font-semibold">
+          {row.price != null ? `$${Number(row.price).toFixed(2)}` : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "language",
+      header: "Language",
+      accessor: (row) => (
+        <span className="text-slate-700">{row.language}</span>
       ),
     },
     {
       key: "is_published",
       header: "Published",
       accessor: (row) => (
-        <span className={row.is_published ? "text-green-600" : "text-slate-500"}>
+        <span className={row.is_published ? "text-green-600 font-medium" : "text-slate-500"}>
           {row.is_published ? "Yes" : "No"}
         </span>
       ),
@@ -65,9 +100,20 @@ export default function CourseManagementPage() {
       key: "created_at",
       header: "Created",
       accessor: (row) => (
-        <span className="text-slate-700">
+        <span className="text-slate-700 text-sm">
           {row.created_at
             ? new Date(row.created_at).toLocaleDateString()
+            : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "updated_at",
+      header: "Updated",
+      accessor: (row) => (
+        <span className="text-slate-600 text-sm">
+          {row.updated_at
+            ? new Date(row.updated_at).toLocaleDateString()
             : "—"}
         </span>
       ),
