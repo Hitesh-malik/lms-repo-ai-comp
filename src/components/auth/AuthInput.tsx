@@ -33,6 +33,7 @@ export default function AuthInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="border-none outline-none bg-transparent font-semibold 2xl:text-xl xl:text-lg lg:text-base md:text-base sm:text-base text-sm text-gray-800 placeholder:text-gray-400 placeholder:font-medium"
+        suppressHydrationWarning
       />
     </div>
   );
