@@ -27,3 +27,19 @@ export async function deleteCourseApi(slug: string): Promise<DeleteCourseRes> {
   const res = await api.delete<DeleteCourseRes>(`/api/v1/courses/${slug}`);
   return res.data;
 }
+
+export type CreateCourseBody = {
+  title: string;
+  slug: string;
+  description?: string | null;
+  language?: string | null;
+  price?: number | null;
+  type?: string | null;
+};
+
+export type CreateCourseRes = Course;
+
+export async function createCourseApi(body: CreateCourseBody): Promise<CreateCourseRes> {
+  const res = await api.post<CreateCourseRes>("/api/v1/courses", body);
+  return res.data;
+}

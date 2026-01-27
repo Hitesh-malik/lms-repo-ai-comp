@@ -3,6 +3,7 @@
 import DataTable, { Column } from "@/components/Common/DataTable";
 import CommonModal from "@/components/Common/modal";
 import { SearchBar } from "@/components/Common/searchBar";
+import AddCourseForm from "@/components/Form/AddCourseForm";
 import { useCoursesAdminQuery } from "@/hooks/useCourseQueries";
 import { useDeleteCourseMutation } from "@/hooks/useCourseMutations";
 import { Course } from "@/services/courseApi";
@@ -13,6 +14,7 @@ import toast from "react-hot-toast";
 
 export default function CourseManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [addCourseModalOpen, setAddCourseModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
 
@@ -129,7 +131,7 @@ export default function CourseManagementPage() {
   ];
 
   const handleAddCourse = () => {
-    // TODO: open Add Course modal / drawer
+    setAddCourseModalOpen(true);
   };
 
   const handleEditCourse = (_row: Course) => {
@@ -206,6 +208,14 @@ export default function CourseManagementPage() {
           />
         )}
       </div>
+
+      {/* Add Course modal */}
+      <CommonModal
+        isOpen={addCourseModalOpen}
+        setIsOpen={setAddCourseModalOpen}
+      >
+        <AddCourseForm onClose={() => setAddCourseModalOpen(false)} />
+      </CommonModal>
 
       {/* Delete confirmation modal */}
       <CommonModal

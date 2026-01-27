@@ -5,6 +5,7 @@ interface FormInputProps {
   label: string;
   type?: string;
   placeholder?: string;
+  required?: boolean;
 }
 
 export default function FormInput({
@@ -12,6 +13,7 @@ export default function FormInput({
   label,
   type = "text",
   placeholder,
+  required = true,
 }: FormInputProps) {
   const [field, meta] = useField(name);
 
@@ -19,7 +21,7 @@ export default function FormInput({
     <div className="flex flex-col gap-2">
       <label className="text-slate-700 text-sm font-semibold">
         {label}
-        <span className="text-red-500 ml-1">*</span>
+        {required && <span className="text-red-500 ml-1">*</span>}
       </label>
 
       <input
