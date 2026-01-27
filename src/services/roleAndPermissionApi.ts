@@ -100,3 +100,18 @@ export async function deleteRoleApi(payload: DeleteRoleReq): Promise<DeleteRoleR
   const res = await api.post<DeleteRoleRes>("/api/v1/role/delete", payload);
   return res.data;
 }
+
+// Get Role by ID
+export type GetRoleByIdRes = {
+  id: string;
+  name: string;
+  permissions: Array<{
+    permission: string;
+    id: string;
+  }>;
+};
+
+export async function getRoleByIdApi(roleId: string): Promise<GetRoleByIdRes> {
+  const res = await api.get<GetRoleByIdRes>(`/api/v1/role/get/${roleId}`);
+  return res.data;
+}

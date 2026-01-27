@@ -15,6 +15,7 @@ import AddRoleForm from "@/components/Form/Addroleform";
 
 export default function AddUserPage() {
   const [open, setOpen] = useState(false);
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
 
@@ -42,7 +43,20 @@ export default function AddUserPage() {
     },
   ];
 
-  const handleOpenDrawer = () => setOpen(true);
+  const handleOpenDrawer = () => {
+    setEditingRoleId(null);
+    setOpen(true);
+  };
+
+  const handleEditClick = (row: Role) => {
+    setEditingRoleId(row.id);
+    setOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpen(false);
+    setEditingRoleId(null);
+  };
 
   const handleDeleteClick = (row: Role) => {
     setRoleToDelete(row);
@@ -110,14 +124,21 @@ export default function AddUserPage() {
             columns={columns}
             data={roleAndPermissionData}
             getRowId={(row) => row.id}
-            onEdit={(row) => alert(`Edit: ${row.name}`)}
+            onEdit={handleEditClick}
             onDelete={handleDeleteClick}
           />
         )}
       </div>
 
-      {/* Add Role Modal */}
-      <AddRoleForm isOpen={open} onClose={() => setOpen(false)} />
+      {/* Add/Edit Role Modal */}
+      <AddRoleForm
+        isOpen={open}
+        roleId={editingRoleId}
+        onClose={handleCloseModal}
+        onSubmit={() => {
+          refetch();
+        }}
+      />
 
       {/* Delete confirmation pop-up */}
       <CommonModal
