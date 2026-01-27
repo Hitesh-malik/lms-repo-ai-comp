@@ -20,3 +20,10 @@ export async function getCoursesAdminApi(): Promise<GetCoursesAdminRes> {
   const res = await api.get<GetCoursesAdminRes>("/api/v1/courses/admin");
   return res.data;
 }
+
+export type DeleteCourseRes = Record<string, unknown> | null;
+
+export async function deleteCourseApi(slug: string): Promise<DeleteCourseRes> {
+  const res = await api.delete<DeleteCourseRes>(`/api/v1/courses/${slug}`);
+  return res.data;
+}

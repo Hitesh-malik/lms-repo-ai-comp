@@ -1,15 +1,23 @@
 "use client";
 
 import DataTable, { Column } from "@/components/Common/DataTable";
+import CommonModal from "@/components/Common/modal";
 import { SearchBar } from "@/components/Common/searchBar";
 import { useCoursesAdminQuery } from "@/hooks/useCourseQueries";
+import { useDeleteCourseMutation } from "@/hooks/useCourseMutations";
 import { Course } from "@/services/courseApi";
 import { useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
+import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function CourseManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+
   const { data: courses, isLoading, isError, error, refetch } = useCoursesAdminQuery();
+  const deleteCourseMutation = useDeleteCourseMutation();
 
   const courseRows: Course[] = useMemo(() => {
     if (!courses) return [];
@@ -128,8 +136,32 @@ export default function CourseManagementPage() {
     // TODO: open Edit Course modal
   };
 
-  const handleDeleteCourse = (_row: Course) => {
-    // TODO: open Delete confirmation
+  const handleDeleteCourse = (row: Course) => {
+    setCourseToDelete(row);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!courseToDelete?.slug) return;
+    try {
+      await deleteCourseMutation.mutateAsync(courseToDelete.slug);
+      toast.success("Course deleted successfully!");
+      setDeleteConfirmOpen(false);
+      setCourseToDelete(null);
+      refetch();
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { detail?: string } }; message?: string })
+          ?.response?.data?.detail ??
+        (err as { message?: string })?.message ??
+        "Failed to delete course";
+      toast.error(message);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setCourseToDelete(null);
   };
 
   return (
@@ -174,6 +206,77 @@ export default function CourseManagementPage() {
           />
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      <CommonModal
+        isOpen={deleteConfirmOpen}
+        setIsOpen={(open) => {
+          setDeleteConfirmOpen(open);
+          if (!open) setCourseToDelete(null);
+        }}
+      >
+        <div className="flex flex-col gap-5 py-2">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 p-3 rounded-full bg-red-100 ring-4 ring-red-50">
+              <AlertTriangle className="w-7 h-7 text-red-600" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-semibold text-slate-900">
+                Delete course
+              </h3>
+              <p className="text-slate-600 mt-1">
+                Are you sure you want to delete this course? This will permanently remove it and cannot be undone.
+              </p>
+            </div>
+          </div>
+
+          {courseToDelete && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-3">
+                Course to remove
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
+                  <Trash2 className="w-5 h-5 text-slate-600" aria-hidden />
+                </div>
+                <div className="min-w-0 flex-1 break-words">
+                  <p className="font-semibold text-slate-900">{courseToDelete.title}</p>
+                  <p className="text-sm text-slate-600 mt-0.5">Slug: {courseToDelete.slug}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleDeleteCancel}
+              disabled={deleteCourseMutation.isPending}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteConfirm}
+              disabled={deleteCourseMutation.isPending}
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
+            >
+              {deleteCourseMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" aria-hidden />
+                  Delete course
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </CommonModal>
     </main>
   );
 }
