@@ -5,12 +5,13 @@ import CommonModal from "@/components/Common/modal";
 import { SearchBar } from "@/components/Common/searchBar";
 import { useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
+import { Trash2, AlertTriangle, Loader2, User } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries";
 import UserAuthForm from "@/components/Form/addUser";
 import SimpleRoleSelectForm from "@/components/Form/Simpleroleselectform";
-import { useAddSubAdminMutation } from "@/hooks/useSubAdminMutations";
+import { useAddSubAdminMutation, useDeleteSubAdminMutation } from "@/hooks/useSubAdminMutations";
 import { useAssignRoleMutation } from "@/hooks/useRolePermissionMutations";
 
 type UserRow = {
@@ -18,15 +19,20 @@ type UserRow = {
   fullName: string;
   email: string;
   role: string;
+  createdAt: string;
 };
 
 export default function AddUserPage() {
   const addSubAdminMutation = useAddSubAdminMutation();
   const assignRoleMutation = useAssignRoleMutation();
+  const deleteSubAdminMutation = useDeleteSubAdminMutation();
  
   const [open, setOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserRow | null>(null);
 
   const { data: subAdmins, isLoading, isError, error, refetch } = useSubAdminsQuery();
 
@@ -37,9 +43,9 @@ export default function AddUserPage() {
       id: String(u.id ?? u._id ?? u.userId ?? crypto.randomUUID()),
       fullName: u.name ?? u.fullName ?? "NA",
       email: u.email ?? u.username ?? "NA",
-      role: u.role ?? "SUB_ADMIN",
-      joinedAt: u.createdAt
-        ? new Date(u.createdAt).toLocaleString()
+      role: u.role_name ?? u.role ?? "SUB_ADMIN",
+      createdAt: u.created_at
+        ? new Date(u.created_at).toLocaleString()
         : "NA",
     }));
   }, [subAdmins]);
@@ -66,12 +72,20 @@ export default function AddUserPage() {
       ),
     },
     { key: "role", header: "Role", accessor: "role" },
+    {
+      key: "createdAt",
+      header: "Created At",
+      accessor: (row) => (
+        <span className="text-slate-700">{row.createdAt}</span>
+      ),
+    },
   ];
 
   const handleOpenDrawer = () => setOpen(true);
 
   const handleEditClick = (row: UserRow) => {
     setSelectedUserId(row.id);
+    setSelectedUser(row);
     setRoleModalOpen(true);
   };
 
@@ -90,10 +104,35 @@ export default function AddUserPage() {
       toast.success("Role assigned successfully!");
       setRoleModalOpen(false);
       setSelectedUserId(null);
+      setSelectedUser(null);
       refetch(); // Refresh the user list
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || error?.message || "Failed to assign role");
     }
+  };
+
+  const handleDeleteClick = (row: UserRow) => {
+    setUserToDelete(row);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!userToDelete) return;
+
+    try {
+      await deleteSubAdminMutation.mutateAsync(userToDelete.id);
+      toast.success("User deleted successfully!");
+      setDeleteConfirmOpen(false);
+      setUserToDelete(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || error?.message || "Failed to delete user");
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setUserToDelete(null);
   };
 
   return (
@@ -131,7 +170,7 @@ export default function AddUserPage() {
             data={users}
             getRowId={(row) => row.id}
             onEdit={handleEditClick}
-            onDelete={(row) => alert(`Delete: ${row.fullName}`)}
+            onDelete={handleDeleteClick}
           />
         )}
       </div>
@@ -168,12 +207,92 @@ export default function AddUserPage() {
       <CommonModal isOpen={roleModalOpen} setIsOpen={setRoleModalOpen}>
         <SimpleRoleSelectForm
           isOpen={roleModalOpen}
+          user={selectedUser}
           onClose={() => {
             setRoleModalOpen(false);
             setSelectedUserId(null);
+            setSelectedUser(null);
           }}
           onSubmit={handleRoleAssign}
         />
+      </CommonModal>
+
+      {/* Delete confirmation pop-up */}
+      <CommonModal
+        isOpen={deleteConfirmOpen}
+        setIsOpen={(open) => {
+          setDeleteConfirmOpen(open);
+          if (!open) setUserToDelete(null);
+        }}
+      >
+        <div className="flex flex-col gap-5 py-2">
+          {/* Header */}
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 p-3 rounded-full bg-red-100 ring-4 ring-red-50">
+              <AlertTriangle className="w-7 h-7 text-red-600" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-semibold text-slate-900">
+                Delete sub-admin
+              </h3>
+              <p className="text-slate-600 mt-1">
+                Are you sure that you wish to delete this module? This will permanently remove them from sub-admins and cannot be undone.
+              </p>
+            </div>
+          </div>
+
+          {/* User being removed — full name and email, no truncation */}
+          {userToDelete && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-3">
+                User to remove
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
+                  <User className="w-5 h-5 text-slate-600" aria-hidden />
+                </div>
+                <div className="min-w-0 flex-1 break-words">
+                  <p className="font-semibold text-slate-900">
+                    {userToDelete.fullName}
+                  </p>
+                  <p className="text-sm text-slate-600 mt-0.5 break-all">
+                    {userToDelete.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleDeleteCancel}
+              disabled={deleteSubAdminMutation.isPending}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteConfirm}
+              disabled={deleteSubAdminMutation.isPending}
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
+            >
+              {deleteSubAdminMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" aria-hidden />
+                  Delete user
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </CommonModal>
     </main>
   );

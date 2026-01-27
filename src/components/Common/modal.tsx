@@ -25,7 +25,7 @@ export default function CommonModal({
             animate={{ scale: 1, rotate: "0deg" }}
             exit={{ scale: 0, rotate: "0deg" }}
             onClick={(e) => e.stopPropagation()}
-            className="min-h-[500px] bg-white text-slate-900 p-8 rounded-xl min-w-[500px] max-w-[600px] shadow-2xl cursor-default relative overflow-hidden max-h-[90vh] border border-slate-100"
+            className="min-h-[300px] bg-white text-slate-900 p-8 rounded-xl min-w-[500px] max-w-[600px] shadow-2xl cursor-default relative overflow-hidden max-h-[90vh] border border-slate-100"
           >
             <button
               type="button"

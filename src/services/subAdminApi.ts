@@ -31,3 +31,14 @@ export async function addSubAdminApi(payload: AddSubAdminReq): Promise<AddSubAdm
   const res = await api.post<AddSubAdminRes>("/api/v1/role/add-sub-admin", payload);
   return res.data;
 }
+
+// Delete Sub Admin
+export type DeleteSubAdminRes = {
+  success?: boolean;
+  detail?: string;
+} | null;
+
+export async function deleteSubAdminApi(user_id: string): Promise<DeleteSubAdminRes> {
+  const res = await api.post<DeleteSubAdminRes>(`/api/v1/role/delete-sub-admin/${user_id}`);
+  return res.data;
+}
