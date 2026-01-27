@@ -6,6 +6,8 @@ import {
   CreateRoleReq,
   updateRolePermissionApi,
   UpdateRolePermissionReq,
+  deleteRoleApi,
+  DeleteRoleReq,
 } from "@/services/roleAndPermissionApi";
 import { subAdminKeys } from "./useSubAdminQueries";
 import { roleAndPermissionKeys } from "./useRolePermissionQueries";
@@ -44,6 +46,20 @@ export function useUpdateRolePermissionMutation() {
       updateRolePermissionApi(payload),
     onSuccess: () => {
       // Invalidate and refetch roles list after successful permission update
+      queryClient.invalidateQueries({
+        queryKey: roleAndPermissionKeys.all,
+      });
+    },
+  });
+}
+
+export function useDeleteRoleMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: DeleteRoleReq) => deleteRoleApi(payload),
+    onSuccess: () => {
+      // Invalidate and refetch roles list after successful deletion
       queryClient.invalidateQueries({
         queryKey: roleAndPermissionKeys.all,
       });

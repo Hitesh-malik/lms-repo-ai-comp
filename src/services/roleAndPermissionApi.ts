@@ -84,3 +84,19 @@ export async function updateRolePermissionApi(
   );
   return res.data;
 }
+
+// Delete Role
+export type DeleteRoleReq = Array<{
+  name: string;
+  id: string;
+}>;
+
+export type DeleteRoleRes = {
+  detail?: string;
+  success?: boolean;
+};
+
+export async function deleteRoleApi(payload: DeleteRoleReq): Promise<DeleteRoleRes> {
+  const res = await api.post<DeleteRoleRes>("/api/v1/role/delete", payload);
+  return res.data;
+}

@@ -5,15 +5,21 @@ import CommonModal from "@/components/Common/modal";
 import { SearchBar } from "@/components/Common/searchBar";
 import { useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
+import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
-import { useRoleAndPermissionQuery } from "@/hooks/useRolePermissionQueries"; // ✅ new
+import { useRoleAndPermissionQuery } from "@/hooks/useRolePermissionQueries";
+import { useDeleteRoleMutation } from "@/hooks/useRolePermissionMutations";
 import { Role } from "@/services/roleAndPermissionApi";
 import AddRoleForm from "@/components/Form/Addroleform";
 
 export default function AddUserPage() {
   const [open, setOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
 
   const { data: roleAndPermission, isLoading, isError, error, refetch } = useRoleAndPermissionQuery();
+  const deleteRoleMutation = useDeleteRoleMutation();
   const roleAndPermissionData: Role[] = useMemo(() => {
     if (!roleAndPermission) return [];    
     return roleAndPermission?.map((r: Role) => ({
@@ -37,6 +43,39 @@ export default function AddUserPage() {
   ];
 
   const handleOpenDrawer = () => setOpen(true);
+
+  const handleDeleteClick = (row: Role) => {
+    setRoleToDelete(row);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!roleToDelete) return;
+
+    try {
+      await deleteRoleMutation.mutateAsync([
+        {
+          name: roleToDelete.name,
+          id: roleToDelete.id,
+        },
+      ]);
+      toast.success("Role deleted successfully!");
+      setDeleteConfirmOpen(false);
+      setRoleToDelete(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.detail ||
+          error?.message ||
+          "Failed to delete role"
+      );
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setRoleToDelete(null);
+  };
 
   return (
     <main className="min-h-screen bg-white">
@@ -72,11 +111,91 @@ export default function AddUserPage() {
             data={roleAndPermissionData}
             getRowId={(row) => row.id}
             onEdit={(row) => alert(`Edit: ${row.name}`)}
-            onDelete={(row) => alert(`Delete: ${row.name}`)}
+            onDelete={handleDeleteClick}
           />
         )}
-      </div> 
-          <AddRoleForm isOpen={open} onClose={() => setOpen(false)} />
+      </div>
+
+      {/* Add Role Modal */}
+      <AddRoleForm isOpen={open} onClose={() => setOpen(false)} />
+
+      {/* Delete confirmation pop-up */}
+      <CommonModal
+        isOpen={deleteConfirmOpen}
+        setIsOpen={(open) => {
+          setDeleteConfirmOpen(open);
+          if (!open) setRoleToDelete(null);
+        }}
+      >
+        <div className="flex flex-col gap-5 py-2">
+          {/* Header */}
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 p-3 rounded-full bg-red-100 ring-4 ring-red-50">
+              <AlertTriangle className="w-7 h-7 text-red-600" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-semibold text-slate-900">
+                Delete role
+              </h3>
+              <p className="text-slate-600 mt-1">
+                Are you sure that you wish to delete this role? This will permanently remove it and cannot be undone.
+              </p>
+            </div>
+          </div>
+
+          {/* Role being removed */}
+          {roleToDelete && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-3">
+                Role to remove
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
+                  <Trash2 className="w-5 h-5 text-slate-600" aria-hidden />
+                </div>
+                <div className="min-w-0 flex-1 break-words">
+                  <p className="font-semibold text-slate-900">
+                    {roleToDelete.name}
+                  </p>
+                  <p className="text-sm text-slate-600 mt-0.5">
+                    ID: {roleToDelete.id}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleDeleteCancel}
+              disabled={deleteRoleMutation.isPending}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteConfirm}
+              disabled={deleteRoleMutation.isPending}
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
+            >
+              {deleteRoleMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" aria-hidden />
+                  Delete role
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </CommonModal>
     </main>
   );
 }
