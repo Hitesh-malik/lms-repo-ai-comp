@@ -18,15 +18,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }
   }
 
+  const inputClassName = "w-full outline-none bg-white pl-4 text-sm min-h-9"
+
   return (
     <div className="bg-white flex px-1 py-1 rounded-full border border-black-700 overflow-hidden mx-auto w-full max-w-xl">
-      <input
-        type="email"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="w-full outline-none bg-white pl-4 text-sm"
-      />
+        <input
+          type="search"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className={inputClassName}
+          autoComplete="off"
+        />
       <button
         type="button"
         onClick={handleSearch}
