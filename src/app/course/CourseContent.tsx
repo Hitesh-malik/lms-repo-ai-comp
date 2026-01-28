@@ -4,6 +4,9 @@ import { useSearchParams } from "next/navigation";
 import { useCourseContentAdminQuery } from "@/hooks/useCourseQueries";
 import CommonModal from "@/components/Common/modal";
 import AddModuleForm from "@/components/Form/AddModuleForm";
+import AddLessonForm from "@/components/Form/AddLessonForm";
+import EditLessonForm from "@/components/Form/EditLessonForm";
+import EditModuleForm from "@/components/Form/EditModuleForm";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -12,23 +15,75 @@ import {
 import { Lesson, Module } from "@/services/courseApi";
 import { useState } from "react";
 import { FiPlus } from "react-icons/fi";
-import { ChevronDown, ChevronRight, Settings, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronRight, Settings, RotateCcw, PlayCircle, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { useDeleteLessonMutation, useDeleteModuleMutation } from "@/hooks/useCourseMutations";
+import toast from "react-hot-toast";
 
 export default function CourseContent() {
   const searchParams = useSearchParams();
   const slug = searchParams.get("slug") ?? "";
 
   const [addModuleOpen, setAddModuleOpen] = useState(false);
+  const [addLessonOpen, setAddLessonOpen] = useState(false);
+  const [addLessonModule, setAddLessonModule] = useState<{ id: string; title: string } | null>(null);
+  const [editLessonOpen, setEditLessonOpen] = useState(false);
+  const [editLesson, setEditLesson] = useState<Lesson | null>(null);
+  const [editModuleOpen, setEditModuleOpen] = useState(false);
+  const [moduleToEdit, setModuleToEdit] = useState<Module | null>(null);
+  const [deleteLessonConfirmOpen, setDeleteLessonConfirmOpen] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
+  const [deleteModuleConfirmOpen, setDeleteModuleConfirmOpen] = useState(false);
+  const [moduleToDelete, setModuleToDelete] = useState<Module | null>(null);
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useCourseContentAdminQuery(slug);
+  const deleteLessonMutation = useDeleteLessonMutation(slug);
+  const deleteModuleMutation = useDeleteModuleMutation(slug);
 
   const course = data?.course;
   const modules = (data?.modules ?? []).sort((a, b) => a.order_index - b.order_index);
 
   const toggleModule = (id: string) => {
     setExpandedModuleId((prev) => (prev === id ? null : id));
+  };
+
+  const handleDeleteModuleConfirm = async () => {
+    if (!moduleToDelete?.id) return;
+    try {
+      await deleteModuleMutation.mutateAsync(moduleToDelete.id);
+      toast.success("Module deleted.");
+      if (expandedModuleId === moduleToDelete.id) setExpandedModuleId(null);
+      if (selectedLesson && moduleToDelete.lessons?.some((l) => l.id === selectedLesson.id))
+        setSelectedLesson(null);
+      setDeleteModuleConfirmOpen(false);
+      setModuleToDelete(null);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { detail?: string } }; message?: string })
+          ?.response?.data?.detail ??
+        (err as { message?: string })?.message ??
+        "Failed to delete module";
+      toast.error(message);
+    }
+  };
+
+  const handleDeleteLessonConfirm = async () => {
+    if (!lessonToDelete?.id) return;
+    try {
+      await deleteLessonMutation.mutateAsync(lessonToDelete.id);
+      toast.success("Lesson deleted.");
+      if (selectedLesson?.id === lessonToDelete.id) setSelectedLesson(null);
+      setDeleteLessonConfirmOpen(false);
+      setLessonToDelete(null);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { detail?: string } }; message?: string })
+          ?.response?.data?.detail ??
+        (err as { message?: string })?.message ??
+        "Failed to delete lesson";
+      toast.error(message);
+    }
   };
 
   if (!slug) {
@@ -155,10 +210,31 @@ export default function CourseContent() {
                     <ModuleAccordionItem
                       key={mod.id}
                       module={mod}
+                      slug={slug}
                       isExpanded={expandedModuleId === mod.id}
                       selectedLessonId={selectedLesson?.id ?? null}
                       onToggle={() => toggleModule(mod.id)}
                       onSelectLesson={setSelectedLesson}
+                      onAddLesson={(moduleId, moduleTitle) => {
+                        setAddLessonModule({ id: moduleId, title: moduleTitle });
+                        setAddLessonOpen(true);
+                      }}
+                      onEditLesson={(lesson) => {
+                        setEditLesson(lesson);
+                        setEditLessonOpen(true);
+                      }}
+                      onDeleteLesson={(lesson) => {
+                        setLessonToDelete(lesson);
+                        setDeleteLessonConfirmOpen(true);
+                      }}
+                      onEditModule={(module) => {
+                        setModuleToEdit(module);
+                        setEditModuleOpen(true);
+                      }}
+                      onDeleteModule={(module) => {
+                        setModuleToDelete(module);
+                        setDeleteModuleConfirmOpen(true);
+                      }}
                     />
                   ))}
                 </ul>
@@ -187,73 +263,414 @@ export default function CourseContent() {
           onClose={() => setAddModuleOpen(false)}
         />
       </CommonModal>
+
+      {addLessonModule && (
+        <CommonModal isOpen={addLessonOpen} setIsOpen={setAddLessonOpen}>
+          <AddLessonForm
+            slug={slug}
+            moduleId={addLessonModule.id}
+            moduleTitle={addLessonModule.title}
+            nextOrderIndex={
+              (modules.find((m) => m.id === addLessonModule.id)?.lessons?.length ?? 0) + 1
+            }
+            onClose={() => {
+              setAddLessonOpen(false);
+              setAddLessonModule(null);
+            }}
+          />
+        </CommonModal>
+      )}
+
+      {editLesson && (
+        <CommonModal
+          isOpen={editLessonOpen}
+          setIsOpen={(open) => {
+            setEditLessonOpen(open);
+            if (!open) setEditLesson(null);
+          }}
+        >
+          <EditLessonForm
+            slug={slug}
+            lesson={editLesson}
+            onClose={() => {
+              setEditLessonOpen(false);
+              setEditLesson(null);
+            }}
+          />
+        </CommonModal>
+      )}
+
+      {moduleToEdit && (
+        <CommonModal
+          isOpen={editModuleOpen}
+          setIsOpen={(open) => {
+            setEditModuleOpen(open);
+            if (!open) setModuleToEdit(null);
+          }}
+        >
+          <EditModuleForm
+            slug={slug}
+            module={moduleToEdit}
+            onClose={() => {
+              setEditModuleOpen(false);
+              setModuleToEdit(null);
+            }}
+          />
+        </CommonModal>
+      )}
+
+      <CommonModal
+        isOpen={deleteLessonConfirmOpen}
+        setIsOpen={(open) => {
+          setDeleteLessonConfirmOpen(open);
+          if (!open) setLessonToDelete(null);
+        }}
+      >
+        <div className="flex flex-col gap-5 py-2">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 p-3 rounded-full bg-red-100 ring-4 ring-red-50">
+              <AlertTriangle className="w-7 h-7 text-red-600" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-semibold text-slate-900">Delete lesson</h3>
+              <p className="text-slate-600 mt-1">
+                Are you sure you want to delete this lesson? This cannot be undone.
+              </p>
+            </div>
+          </div>
+          {lessonToDelete && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">
+                Lesson to remove
+              </p>
+              <p className="font-semibold text-slate-900">{lessonToDelete.title}</p>
+              <p className="text-sm text-slate-600 mt-0.5">{lessonToDelete.content_type}</p>
+            </div>
+          )}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteLessonConfirmOpen(false);
+                setLessonToDelete(null);
+              }}
+              disabled={deleteLessonMutation.isPending}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteLessonConfirm}
+              disabled={deleteLessonMutation.isPending}
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
+            >
+              {deleteLessonMutation.isPending ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" aria-hidden />
+                  Delete lesson
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </CommonModal>
+
+      <CommonModal
+        isOpen={deleteModuleConfirmOpen}
+        setIsOpen={(open) => {
+          setDeleteModuleConfirmOpen(open);
+          if (!open) setModuleToDelete(null);
+        }}
+      >
+        <div className="flex flex-col gap-5 py-2">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 p-3 rounded-full bg-red-100 ring-4 ring-red-50">
+              <AlertTriangle className="w-7 h-7 text-red-600" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-semibold text-slate-900">Delete module</h3>
+              <p className="text-slate-600 mt-1">
+                Are you sure you want to delete this module? All lessons in it will be removed. This cannot be undone.
+              </p>
+            </div>
+          </div>
+          {moduleToDelete && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">
+                Module to remove
+              </p>
+              <p className="font-semibold text-slate-900">{moduleToDelete.title}</p>
+              <p className="text-sm text-slate-600 mt-0.5">
+                {(moduleToDelete.lessons ?? []).length} lesson(s)
+              </p>
+            </div>
+          )}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteModuleConfirmOpen(false);
+                setModuleToDelete(null);
+              }}
+              disabled={deleteModuleMutation.isPending}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteModuleConfirm}
+              disabled={deleteModuleMutation.isPending}
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
+            >
+              {deleteModuleMutation.isPending ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" aria-hidden />
+                  Delete module
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </CommonModal>
     </main>
   );
 }
 
 function ModuleAccordionItem({
   module: mod,
+  slug,
   isExpanded,
   selectedLessonId,
   onToggle,
   onSelectLesson,
+  onAddLesson,
+  onEditModule,
+  onDeleteModule,
+  onEditLesson,
+  onDeleteLesson,
 }: {
   module: Module;
+  slug: string;
   isExpanded: boolean;
   selectedLessonId: string | null;
   onToggle: () => void;
   onSelectLesson: (lesson: Lesson) => void;
+  onAddLesson: (moduleId: string, moduleTitle: string) => void;
+  onEditModule: (module: Module) => void;
+  onDeleteModule: (module: Module) => void;
+  onEditLesson: (lesson: Lesson) => void;
+  onDeleteLesson: (lesson: Lesson) => void;
 }) {
   const lessons = (mod.lessons ?? []).sort((a, b) => a.order_index - b.order_index);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <li className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+    <li
+      className="rounded-lg border border-slate-200 bg-white overflow-hidden group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium text-slate-900 hover:bg-slate-50 transition-colors"
+        >
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+          ) : (
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-500" />
+          )}
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-700">
+            {mod.order_index}
+          </span>
+          <span className="min-w-0 flex-1 truncate">{mod.title}</span>
+          <span
+            className={`shrink-0 text-xs font-medium ${
+              mod.is_published ? "text-green-600" : "text-slate-500"
+            }`}
+          >
+            {mod.is_published ? "Published" : "Draft"}
+          </span>
+          <span className="shrink-0 text-xs text-slate-400">
+            {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"}
+          </span>
+        </button>
+        {isHovered && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditModule(mod);
+              }}
+              className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+              aria-label="Edit module"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteModule(mod);
+              }}
+              className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 text-slate-600 hover:bg-red-100 hover:text-red-600 transition-colors"
+              aria-label="Delete module"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddLesson(mod.id, mod.title);
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              <FiPlus className="w-3 h-3" />
+              Add Lesson
+            </button>
+          </div>
+        )}
+      </div>
+      {isExpanded && (
+        <div className="border-t border-slate-100 bg-slate-50/50">
+          {lessons.length === 0 ? (
+            <div className="px-3 py-4 pl-11 text-xs text-slate-500">
+              No lessons in this module.
+            </div>
+          ) : (
+            <ul className="py-1">
+              {lessons.map((lesson) => (
+                <LessonRow
+                  key={lesson.id}
+                  lesson={lesson}
+                  isSelected={selectedLessonId === lesson.id}
+                  onSelect={() => onSelectLesson(lesson)}
+                  onEdit={() => onEditLesson(lesson)}
+                  onDelete={() => onDeleteLesson(lesson)}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
+function LessonRow({
+  lesson,
+  isSelected,
+  onSelect,
+  onEdit,
+  onDelete,
+}: {
+  lesson: Lesson;
+  isSelected: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <li
+      className="group/lesson relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <button
         type="button"
-        onClick={onToggle}
-        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium text-slate-900 hover:bg-slate-50 transition-colors"
+        onClick={onSelect}
+        className={`relative flex w-full items-start gap-3 px-3 py-3 pl-11 text-left transition-colors hover:bg-slate-100 ${
+          isSelected ? "bg-blue-50 text-blue-900" : "text-slate-700"
+        }`}
       >
-        {isExpanded ? (
-          <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
-        ) : (
-          <ChevronRight className="h-4 w-4 shrink-0 text-slate-500" />
-        )}
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-700">
-          {mod.order_index}
-        </span>
-        <span className="min-w-0 flex-1 truncate">{mod.title}</span>
-        <span className="shrink-0 text-xs text-slate-400">
-          {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"}
-        </span>
-      </button>
-      {isExpanded && (
-        <ul className="border-t border-slate-100 bg-slate-50/50 py-1">
-          {lessons.length === 0 ? (
-            <li className="px-3 py-4 pl-11 text-xs text-slate-500">No lessons in this module.</li>
-          ) : (
-            lessons.map((lesson) => (
-              <li key={lesson.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelectLesson(lesson)}
-                  className={`block w-full px-3 py-2 pl-11 text-left text-sm transition-colors hover:bg-slate-100 ${
-                    selectedLessonId === lesson.id
-                      ? "bg-blue-50 text-blue-800 font-medium"
-                      : "text-slate-700"
-                  }`}
-                >
-                  <span className="block truncate">{lesson.title}</span>
-                  {lesson.order_index != null && (
-                    <span className="text-xs text-slate-400 mt-0.5 block">
-                      {lesson.content_type} · {lesson.is_published ? "Published" : "Draft"}
-                    </span>
-                  )}
-                </button>
-              </li>
-            ))
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <PlayCircle
+              className={`h-4 w-4 shrink-0 ${
+                isSelected ? "text-blue-600" : "text-slate-400"
+              }`}
+            />
+            <span
+              className={`font-medium text-sm truncate ${
+                isSelected ? "text-blue-900" : "text-slate-900"
+              }`}
+            >
+              {lesson.title}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap ml-6">
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                lesson.content_type === "video"
+                  ? "bg-purple-100 text-purple-700"
+                  : lesson.content_type === "quiz"
+                  ? "bg-orange-100 text-orange-700"
+                  : "bg-green-100 text-green-700"
+              }`}
+            >
+              {lesson.content_type}
+            </span>
+            <span
+              className={`text-xs ${
+                lesson.is_published ? "text-green-600 font-medium" : "text-slate-500"
+              }`}
+            >
+              {lesson.is_published ? "Published" : "Draft"}
+            </span>
+            {lesson.is_free_preview && (
+              <span className="text-xs text-blue-600 font-medium">Free Preview</span>
+            )}
+          </div>
+          {lesson.description && (
+            <p className="text-xs text-slate-600 mt-1.5 ml-6 line-clamp-2">
+              {lesson.description}
+            </p>
           )}
-        </ul>
-      )}
+        </div>
+        {isHovered && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+              aria-label="Edit lesson"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 text-slate-600 hover:bg-red-100 hover:text-red-600 transition-colors"
+              aria-label="Delete lesson"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </button>
     </li>
   );
 }

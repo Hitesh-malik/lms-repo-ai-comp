@@ -5,6 +5,14 @@ import {
   deleteCourseApi,
   addModuleApi,
   AddModuleBody,
+  updateModuleApi,
+  UpdateModuleBody,
+  deleteModuleApi,
+  addLessonApi,
+  AddLessonBody,
+  updateLessonApi,
+  UpdateLessonBody,
+  deleteLessonApi,
 } from "@/services/courseApi";
 import { courseKeys } from "./useCourseQueries";
 
@@ -35,6 +43,64 @@ export function useAddModuleMutation(slug: string) {
 
   return useMutation({
     mutationFn: (body: AddModuleBody) => addModuleApi(slug, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+    },
+  });
+}
+
+export function useUpdateModuleMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ moduleId, body }: { moduleId: string; body: UpdateModuleBody }) =>
+      updateModuleApi(moduleId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+    },
+  });
+}
+
+export function useDeleteModuleMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (moduleId: string) => deleteModuleApi(moduleId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+    },
+  });
+}
+
+export function useAddLessonMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ moduleId, body }: { moduleId: string; body: AddLessonBody }) =>
+      addLessonApi(moduleId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+    },
+  });
+}
+
+export function useUpdateLessonMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ lessonId, body }: { lessonId: string; body: UpdateLessonBody }) =>
+      updateLessonApi(lessonId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+    },
+  });
+}
+
+export function useDeleteLessonMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (lessonId: string) => deleteLessonApi(lessonId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
     },

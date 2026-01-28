@@ -99,3 +99,69 @@ export async function addModuleApi(slug: string, body: AddModuleBody): Promise<A
   const res = await api.post<AddModuleRes>(`/api/v1/module/${slug}`, body);
   return res.data;
 }
+
+// ——— Update module ———
+export type UpdateModuleBody = {
+  title?: string | null;
+  description?: string | null;
+  is_published?: boolean | null;
+};
+
+export type UpdateModuleRes = Module;
+
+export async function updateModuleApi(
+  moduleId: string,
+  body: UpdateModuleBody
+): Promise<UpdateModuleRes> {
+  const res = await api.put<UpdateModuleRes>(`/api/v1/module/${moduleId}`, body);
+  return res.data;
+}
+
+// ——— Delete module ———
+export async function deleteModuleApi(moduleId: string): Promise<null> {
+  const res = await api.delete<null>(`/api/v1/module/${moduleId}`);
+  return res.data;
+}
+
+// ——— Add lesson ———
+export type AddLessonBody = {
+  title: string;
+  description?: string | null;
+  content_type: "video" | "quiz" | "live";
+  order_index: number;
+};
+
+export type AddLessonRes = {
+  success: boolean;
+  detail: string;
+  lesson: Lesson;
+};
+
+export async function addLessonApi(moduleId: string, body: AddLessonBody): Promise<AddLessonRes> {
+  const res = await api.post<AddLessonRes>(`/api/v1/lesson/${moduleId}`, body);
+  return res.data;
+}
+
+// ——— Update lesson ———
+export type UpdateLessonBody = {
+  title?: string | null;
+  description?: string | null;
+  is_published?: boolean | null;
+  is_free_preview?: boolean | null;
+};
+
+export type UpdateLessonRes = Lesson;
+
+export async function updateLessonApi(
+  lessonId: string,
+  body: UpdateLessonBody
+): Promise<UpdateLessonRes> {
+  const res = await api.put<UpdateLessonRes>(`/api/v1/lesson/${lessonId}`, body);
+  return res.data;
+}
+
+// ——— Delete lesson ———
+export async function deleteLessonApi(lessonId: string): Promise<null> {
+  const res = await api.delete<null>(`/api/v1/lesson/${lessonId}`);
+  return res.data;
+}
