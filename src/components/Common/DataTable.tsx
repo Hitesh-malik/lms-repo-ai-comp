@@ -1,5 +1,5 @@
 import React from "react";
-import { IconEdit, IconTrash, IconUser } from "@tabler/icons-react";
+import { IconEdit, IconEye, IconTrash, IconUser } from "@tabler/icons-react";
 type Accessor<T> = keyof T | ((row: T) => React.ReactNode);
 
 export type Column<T> = {
@@ -21,6 +21,7 @@ type DataTableProps<T> = {
  
   showActions?: boolean;
   actionsHeader?: React.ReactNode;
+  onView?: (row: T) => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   onRole?: (row: T) => void;
@@ -44,13 +45,14 @@ export default function DataTable<T>({
   getRowId,
   showActions = true,
   actionsHeader = "Actions",
+  onView,
   onEdit,
   onDelete,
   onRole,
   emptyText = "No data found",
   className = "",
 }: DataTableProps<T>) {
-  const shouldShowActions = showActions && (onEdit || onDelete || onRole);
+  const shouldShowActions = showActions && (onView || onEdit || onDelete || onRole);
 
   return (
     <div className={className}>
@@ -113,6 +115,16 @@ export default function DataTable<T>({
                     {shouldShowActions ? (
                       <td className="p-4">
                         <div className="flex items-center gap-2">
+                          {onView ? (
+                            <button
+                              type="button"
+                              title="View"
+                              onClick={() => onView(row)}
+                              className="cursor-pointer text-slate-600 hover:text-slate-800 transition-colors"
+                            >
+                              <IconEye />
+                            </button>
+                          ) : null}
                           {onRole ? (
                             <button
                               type="button"

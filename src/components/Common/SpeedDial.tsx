@@ -8,8 +8,8 @@ export default function SpeedDial() {
   const [open, setOpen] = useState(false);
 
   const actions = [
-    { icon: BookOpen, label: "Add Course" },
-    { icon: Users, label: "Add Student" },
+    { icon: BookOpen, label: "peronal management" },
+    { icon: Users, label: "Logout" },
     { icon: Settings, label: "Settings" },
   ];
 

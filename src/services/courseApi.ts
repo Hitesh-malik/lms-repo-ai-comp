@@ -43,3 +43,59 @@ export async function createCourseApi(body: CreateCourseBody): Promise<CreateCou
   const res = await api.post<CreateCourseRes>("/api/v1/courses", body);
   return res.data;
 }
+
+// ——— Course content (admin) ———
+export type Lesson = {
+  id: string;
+  module_id: string;
+  content_id: string | null;
+  content_type: string;
+  content_uploaded: boolean;
+  title: string;
+  description: string | null;
+  order_index: number;
+  is_published: boolean;
+  is_free_preview: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Module = {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string | null;
+  order_index: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+  lessons?: Lesson[];
+};
+
+export type GetCourseContentAdminRes = {
+  course: Course;
+  modules: Module[];
+};
+
+export async function getCourseContentAdminApi(slug: string): Promise<GetCourseContentAdminRes> {
+  const res = await api.get<GetCourseContentAdminRes>(`/api/v1/courses/admin/content/${slug}`);
+  return res.data;
+}
+
+// ——— Add module ———
+export type AddModuleBody = {
+  title: string;
+  description?: string | null;
+  order_index: number;
+};
+
+export type AddModuleRes = {
+  success: boolean;
+  detail: string;
+  module: Module;
+};
+
+export async function addModuleApi(slug: string, body: AddModuleBody): Promise<AddModuleRes> {
+  const res = await api.post<AddModuleRes>(`/api/v1/module/${slug}`, body);
+  return res.data;
+}

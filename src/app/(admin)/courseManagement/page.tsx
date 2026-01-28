@@ -8,6 +8,7 @@ import { useCoursesAdminQuery } from "@/hooks/useCourseQueries";
 import { useDeleteCourseMutation } from "@/hooks/useCourseMutations";
 import { Course } from "@/services/courseApi";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FiPlus } from "react-icons/fi";
 import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,6 +19,7 @@ export default function CourseManagementPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
 
+  const router = useRouter();
   const { data: courses, isLoading, isError, error, refetch } = useCoursesAdminQuery();
   const deleteCourseMutation = useDeleteCourseMutation();
 
@@ -134,6 +136,10 @@ export default function CourseManagementPage() {
     setAddCourseModalOpen(true);
   };
 
+  const handleViewCourse = (row: Course) => {
+    router.push(`/course?slug=${encodeURIComponent(row.slug ?? "")}`);
+  };
+
   const handleEditCourse = (_row: Course) => {
     // TODO: open Edit Course modal
   };
@@ -203,6 +209,7 @@ export default function CourseManagementPage() {
             columns={columns}
             data={courseRows}
             getRowId={(row) => row.id}
+            onView={handleViewCourse}
             onEdit={handleEditCourse}
             onDelete={handleDeleteCourse}
           />

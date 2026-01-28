@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createCourseApi, CreateCourseBody, deleteCourseApi } from "@/services/courseApi";
+import {
+  createCourseApi,
+  CreateCourseBody,
+  deleteCourseApi,
+  addModuleApi,
+  AddModuleBody,
+} from "@/services/courseApi";
 import { courseKeys } from "./useCourseQueries";
 
 export function useDeleteCourseMutation() {
@@ -20,6 +26,17 @@ export function useCreateCourseMutation() {
     mutationFn: (body: CreateCourseBody) => createCourseApi(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: courseKeys.all });
+    },
+  });
+}
+
+export function useAddModuleMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: AddModuleBody) => addModuleApi(slug, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
     },
   });
 }
