@@ -3,15 +3,24 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, BookOpen, Users, Settings } from "lucide-react";
+import { useLogoutMutation } from "@/hooks/useAuthMutations";
 
 export default function SpeedDial() {
   const [open, setOpen] = useState(false);
+  const { mutate: logout, isPending } = useLogoutMutation();
 
   const actions = [
     { icon: BookOpen, label: "peronal management" },
     { icon: Users, label: "Logout" },
     { icon: Settings, label: "Settings" },
   ];
+
+  const handleActionClick = (label: string) => {
+    if (label === "Logout") {
+      logout();
+    }
+    setOpen(false);
+  };
 
   return (
     <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3">
@@ -25,6 +34,8 @@ export default function SpeedDial() {
               exit={{ opacity: 0, scale: 0.5, y: 20 }}
               transition={{ delay: i * 0.05 }}
               className="flex items-center gap-2 bg-white shadow-md border rounded-full px-4 py-2 text-sm hover:bg-gray-100"
+              onClick={() => handleActionClick(action.label)}
+              disabled={action.label === "Logout" && isPending}
             >
               <action.icon size={16} />
               {action.label}

@@ -5,13 +5,21 @@ import CommonModal from "@/components/Common/modal";
 import { SearchBar } from "@/components/Common/searchBar";
 import AddCourseForm from "@/components/Form/AddCourseForm";
 import { useCoursesAdminQuery } from "@/hooks/useCourseQueries";
-import { useDeleteCourseMutation } from "@/hooks/useCourseMutations";
-import { Course } from "@/services/courseApi";
+import {
+  useDeleteCourseMutation,
+  useUpdateCourseThumbnailMutation,
+  useDeleteCourseThumbnailMutation,
+} from "@/hooks/useCourseMutations";
+import {
+  Course,
+  getCourseThumbnailSignedUrlApi,
+} from "@/services/courseApi";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiPlus } from "react-icons/fi";
-import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { Trash2, AlertTriangle, Loader2, UploadCloud } from "lucide-react";
 import toast from "react-hot-toast";
+import { FileUpload } from "@/components/ui/file-upload";
 
 export default function CourseManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,7 +28,8 @@ export default function CourseManagementPage() {
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
 
   const router = useRouter();
-  const { data: courses, isLoading, isError, error, refetch } = useCoursesAdminQuery();
+  const { data: courses, isLoading, isError, error, refetch } =
+    useCoursesAdminQuery();
   const deleteCourseMutation = useDeleteCourseMutation();
 
   const courseRows: Course[] = useMemo(() => {
@@ -29,6 +38,7 @@ export default function CourseManagementPage() {
       id: c.id,
       slug: c.slug ?? "",
       thumbnail_key: c.thumbnail_key ?? null,
+      thumbnail_url: c.thumbnail_url ?? null,
       title: c.title ?? "",
       type: c.type ?? "",
       is_published: c.is_published ?? false,
@@ -38,6 +48,7 @@ export default function CourseManagementPage() {
       language: c.language ?? "",
       created_at: c.created_at ?? "",
     }));
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -53,6 +64,11 @@ export default function CourseManagementPage() {
   }, [courses, searchQuery]);
 
   const columns: Column<Course>[] = [
+    {
+      key: "thumbnail",
+      header: "Thumbnail",
+      accessor: (row) => <ThumbnailCell course={row} onUploaded={refetch} />,
+    },
     {
       key: "title",
       header: "Title",
@@ -78,7 +94,10 @@ export default function CourseManagementPage() {
       key: "description",
       header: "Description",
       accessor: (row) => (
-        <span className="text-slate-700 line-clamp-2 max-w-xs" title={row.description ?? ""}>
+        <span
+          className="text-slate-700 line-clamp-2 max-w-xs"
+          title={row.description ?? ""}
+        >
           {row.description ?? "—"}
         </span>
       ),
@@ -95,15 +114,17 @@ export default function CourseManagementPage() {
     {
       key: "language",
       header: "Language",
-      accessor: (row) => (
-        <span className="text-slate-700">{row.language}</span>
-      ),
+      accessor: (row) => <span className="text-slate-700">{row.language}</span>,
     },
     {
       key: "is_published",
       header: "Published",
       accessor: (row) => (
-        <span className={row.is_published ? "text-green-600 font-medium" : "text-slate-500"}>
+        <span
+          className={
+            row.is_published ? "text-green-600 font-medium" : "text-slate-500"
+          }
+        >
           {row.is_published ? "Yes" : "No"}
         </span>
       ),
@@ -113,9 +134,7 @@ export default function CourseManagementPage() {
       header: "Created",
       accessor: (row) => (
         <span className="text-slate-700 text-sm">
-          {row.created_at
-            ? new Date(row.created_at).toLocaleDateString()
-            : "—"}
+          {row.created_at ? new Date(row.created_at).toLocaleDateString() : "—"}
         </span>
       ),
     },
@@ -124,17 +143,13 @@ export default function CourseManagementPage() {
       header: "Updated",
       accessor: (row) => (
         <span className="text-slate-600 text-sm">
-          {row.updated_at
-            ? new Date(row.updated_at).toLocaleDateString()
-            : "—"}
+          {row.updated_at ? new Date(row.updated_at).toLocaleDateString() : "—"}
         </span>
       ),
     },
   ];
 
-  const handleAddCourse = () => {
-    setAddCourseModalOpen(true);
-  };
+  const handleAddCourse = () => setAddCourseModalOpen(true);
 
   const handleViewCourse = (row: Course) => {
     router.push(`/course?slug=${encodeURIComponent(row.slug ?? "")}`);
@@ -184,6 +199,7 @@ export default function CourseManagementPage() {
             placeholder="Search courses..."
             onSearch={(value) => setSearchQuery(value)}
           />
+
           <NeumorphismButton
             name="Add Course"
             icon={<FiPlus />}
@@ -217,10 +233,7 @@ export default function CourseManagementPage() {
       </div>
 
       {/* Add Course modal */}
-      <CommonModal
-        isOpen={addCourseModalOpen}
-        setIsOpen={setAddCourseModalOpen}
-      >
+      <CommonModal isOpen={addCourseModalOpen} setIsOpen={setAddCourseModalOpen}>
         <AddCourseForm onClose={() => setAddCourseModalOpen(false)} />
       </CommonModal>
 
@@ -242,7 +255,8 @@ export default function CourseManagementPage() {
                 Delete course
               </h3>
               <p className="text-slate-600 mt-1">
-                Are you sure you want to delete this course? This will permanently remove it and cannot be undone.
+                Are you sure you want to delete this course? This will
+                permanently remove it and cannot be undone.
               </p>
             </div>
           </div>
@@ -257,8 +271,12 @@ export default function CourseManagementPage() {
                   <Trash2 className="w-5 h-5 text-slate-600" aria-hidden />
                 </div>
                 <div className="min-w-0 flex-1 break-words">
-                  <p className="font-semibold text-slate-900">{courseToDelete.title}</p>
-                  <p className="text-sm text-slate-600 mt-0.5">Slug: {courseToDelete.slug}</p>
+                  <p className="font-semibold text-slate-900">
+                    {courseToDelete.title}
+                  </p>
+                  <p className="text-sm text-slate-600 mt-0.5">
+                    Slug: {courseToDelete.slug}
+                  </p>
                 </div>
               </div>
             </div>
@@ -315,3 +333,263 @@ const NeumorphismButton = ({
     <span>{name}</span>
   </button>
 );
+
+function ThumbnailCell({
+  course,
+  onUploaded,
+}: {
+  course: Course;
+  onUploaded: () => void;
+}) {
+  const updateThumbnailMutation = useUpdateCourseThumbnailMutation(course.slug);
+  const deleteThumbMutation = useDeleteCourseThumbnailMutation(course.slug);
+
+  const [open, setOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showUploader, setShowUploader] = useState(false); // false=preview, true=uploader
+
+  const hasThumb = Boolean(course.thumbnail_url);
+
+  const isBusy =
+    updateThumbnailMutation.isPending || deleteThumbMutation.isPending;
+
+  const openModal = () => {
+    setSelectedFile(null);
+    setShowUploader(!hasThumb); // thumb exists -> preview; else -> uploader
+    setOpen(true);
+  };
+
+  const onPickFile = (files: File[]) => {
+    const f = files?.[0] ?? null;
+    if (!f) {
+      setSelectedFile(null);
+      return;
+    }
+
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(f.type)) {
+      toast.error("Only JPG / PNG / WEBP are allowed");
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(f);
+  };
+
+  const handleUpload = async () => {
+    if (!course.slug) {
+      toast.error("Course slug missing");
+      return;
+    }
+    if (!selectedFile) {
+      toast.error("Please select an image first");
+      return;
+    }
+
+    try {
+      const signed = await getCourseThumbnailSignedUrlApi({
+        file_type: selectedFile.type as "image/jpeg" | "image/png" | "image/webp",
+      });
+
+      const uploadUrl =
+        (signed.upload_url as string | undefined) ||
+        (signed.signed_url as string | undefined) ||
+        (signed.url as string | undefined);
+
+      if (!uploadUrl || !signed.object_key) {
+        throw new Error("Invalid signed URL response from server");
+      }
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": selectedFile.type },
+        body: selectedFile,
+      });
+
+      if (!uploadRes.ok) throw new Error("Failed to upload file to storage");
+
+      await updateThumbnailMutation.mutateAsync(signed.object_key);
+
+      toast.success("Thumbnail updated");
+      onUploaded();
+
+      setOpen(false);
+      setSelectedFile(null);
+      setShowUploader(false);
+    } catch (err) {
+      toast.error((err as { message?: string })?.message ?? "Upload failed");
+    }
+  };
+
+  const handleDeleteThumbnail = async () => {
+    try {
+      await deleteThumbMutation.mutateAsync();
+
+      toast.success("Thumbnail deleted");
+
+      // ✅ After delete: switch to uploader to upload new thumbnail
+      setSelectedFile(null);
+      setShowUploader(true);
+
+      // optional: if you want to refresh the table instantly
+      onUploaded();
+    } catch (err) {
+      toast.error(
+        (err as { message?: string })?.message ?? "Failed to delete thumbnail"
+      );
+    }
+  };
+
+  return (
+    <>
+      {/* TABLE CELL */}
+      <div className="flex items-center">
+        {hasThumb ? (
+          <button
+            type="button"
+            onClick={openModal}
+            className="group relative"
+            title="Click to preview/update thumbnail"
+          >
+            <img
+              src={course.thumbnail_url!}
+              alt={course.title}
+              className="w-20 h-12 rounded-md object-cover border border-slate-200"
+            />
+            <span className="absolute inset-0 rounded-md bg-black/0 group-hover:bg-black/20 transition" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={openModal}
+            className="w-20 h-12 rounded-md border border-dashed border-slate-300 flex items-center justify-center hover:bg-slate-50 transition"
+            title="Upload thumbnail"
+          >
+            <UploadCloud className="w-5 h-5 text-slate-500" />
+          </button>
+        )}
+      </div>
+
+      {/* MODAL */}
+      <CommonModal
+        isOpen={open}
+        setIsOpen={(v) => {
+          setOpen(v);
+          if (!v) {
+            setSelectedFile(null);
+            setShowUploader(false);
+          }
+        }}
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              {hasThumb ? "Update thumbnail" : "Upload thumbnail"}
+            </h3>
+            <p className="text-sm text-slate-600 mt-1">
+              Choose a JPG/PNG/WEBP image and click Upload.
+            </p>
+          </div>
+
+          {/* ✅ PREVIEW MODE (thumbnail exists, uploader hidden) */}
+          {hasThumb && !showUploader && (
+            <div className="w-full">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
+                  <img
+                    src={course.thumbnail_url!}
+                    alt="Current thumbnail"
+                    className="w-full max-h-[340px] object-contain"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  disabled={isBusy}
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Close
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDeleteThumbnail}
+                  disabled={isBusy}
+                  className="px-4 py-2 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-60 flex items-center gap-2"
+                >
+                  {deleteThumbMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Deleting…
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ UPLOAD MODE (no thumbnail OR user clicked delete/replace) */}
+          {(!hasThumb || showUploader) && (
+            <>
+              <div className="w-full">
+                <FileUpload onChange={onPickFile} />
+                {selectedFile && (
+                  <p className="text-xs text-slate-600 mt-2">
+                    Selected:{" "}
+                    <span className="font-medium">{selectedFile.name}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // If thumb existed, go back to preview
+                    if (hasThumb) {
+                      setSelectedFile(null);
+                      setShowUploader(false);
+                      return;
+                    }
+                    // If no thumb, just close
+                    setOpen(false);
+                    setSelectedFile(null);
+                  }}
+                  disabled={isBusy}
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleUpload}
+                  disabled={isBusy || !selectedFile}
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+                >
+                  {updateThumbnailMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Uploading…
+                    </>
+                  ) : (
+                    "Upload"
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </CommonModal>
+    </>
+  );
+}
+

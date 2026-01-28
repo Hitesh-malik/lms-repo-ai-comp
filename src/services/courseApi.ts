@@ -4,6 +4,8 @@ export type Course = {
   id: string;
   slug: string;
   thumbnail_key: string | null;
+  // full URL for thumbnail image (can be null)
+  thumbnail_url?: string | null;
   title: string;
   type: string;
   is_published: boolean;
@@ -41,6 +43,51 @@ export type CreateCourseRes = Course;
 
 export async function createCourseApi(body: CreateCourseBody): Promise<CreateCourseRes> {
   const res = await api.post<CreateCourseRes>("/api/v1/courses", body);
+  return res.data;
+}
+
+// ——— Course thumbnail upload ———
+export type GetThumbnailSignedUrlBody = {
+  file_type: "image/jpeg" | "image/png" | "image/webp";
+};
+
+export type GetThumbnailSignedUrlRes = {
+  object_key: string;
+  upload_url?: string;
+  signed_url?: string;
+  url?: string;
+  [key: string]: unknown;
+};
+
+export async function getCourseThumbnailSignedUrlApi(
+  body: GetThumbnailSignedUrlBody
+): Promise<GetThumbnailSignedUrlRes> {
+  const res = await api.post<GetThumbnailSignedUrlRes>("/api/v1/courses/get-signed-url", body);
+  return res.data;
+}
+
+export type SaveThumbnailBody = {
+  object_key: string;
+};
+
+export type SaveThumbnailRes = {
+  success: boolean;
+  detail: string;
+};
+
+export async function saveCourseThumbnailApi(
+  slug: string,
+  body: SaveThumbnailBody
+): Promise<SaveThumbnailRes> {
+  const res = await api.post<SaveThumbnailRes>(
+    `/api/v1/courses/save-thumbnail/${slug}`,
+    body
+  );
+  return res.data;
+}
+
+export async function deleteCourseThumbnailApi(slug: string): Promise<null> {
+  const res = await api.delete<null>(`/api/v1/courses/delete-thumbnail/${slug}`);
   return res.data;
 }
 

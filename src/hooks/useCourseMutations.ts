@@ -13,6 +13,9 @@ import {
   updateLessonApi,
   UpdateLessonBody,
   deleteLessonApi,
+  getCourseThumbnailSignedUrlApi,
+  saveCourseThumbnailApi,
+  deleteCourseThumbnailApi,
 } from "@/services/courseApi";
 import { courseKeys } from "./useCourseQueries";
 
@@ -102,6 +105,32 @@ export function useDeleteLessonMutation(slug: string) {
   return useMutation({
     mutationFn: (lessonId: string) => deleteLessonApi(lessonId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+    },
+  });
+}
+
+export function useUpdateCourseThumbnailMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (object_key: string) => {
+      return saveCourseThumbnailApi(slug, { object_key });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.admin() });
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+    },
+  });
+}
+
+export function useDeleteCourseThumbnailMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => deleteCourseThumbnailApi(slug),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.admin() });
       queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
     },
   });

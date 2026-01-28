@@ -20,5 +20,6 @@ export const tokenStore = {
   clear() {
     if (typeof window === "undefined") return;
     localStorage.removeItem(KEY);
+    localStorage.removeItem(REFRESH_KEY);
   },
 };

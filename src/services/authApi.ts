@@ -46,8 +46,30 @@ export async function signupApi(payload: SignupReq): Promise<SignupRes> {
 
 // logout
 export async function logoutApi() {
-  const res = await api.post("/api/v1/authlogout");
-  return res.data;
+  const refresh_token = tokenStore.getRefresh();
+
+  if (!refresh_token) {
+    throw new Error("No refresh token found");
+  }
+
+  const res = await fetch(`${CONFIG.apiBaseUrl}/api/v1/authlogout`, {
+    method: "POST",
+    headers: {
+      Accept: "*/*",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${refresh_token}`,
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to logout");
+  }
+
+  const data = await res.text();
+
+  return data;
 }
 
 // refresh access token using fetch
