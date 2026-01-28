@@ -346,7 +346,7 @@ function ThumbnailCell({
 
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showUploader, setShowUploader] = useState(false); // false=preview, true=uploader
+  const [showUploader, setShowUploader] = useState(false); 
 
   const hasThumb = Boolean(course.thumbnail_url);
 
@@ -355,7 +355,7 @@ function ThumbnailCell({
 
   const openModal = () => {
     setSelectedFile(null);
-    setShowUploader(!hasThumb); // thumb exists -> preview; else -> uploader
+    setShowUploader(!hasThumb); 
     setOpen(true);
   };
 
@@ -427,11 +427,9 @@ function ThumbnailCell({
 
       toast.success("Thumbnail deleted");
 
-      // ✅ After delete: switch to uploader to upload new thumbnail
       setSelectedFile(null);
       setShowUploader(true);
 
-      // optional: if you want to refresh the table instantly
       onUploaded();
     } catch (err) {
       toast.error(
@@ -491,7 +489,6 @@ function ThumbnailCell({
             </p>
           </div>
 
-          {/* ✅ PREVIEW MODE (thumbnail exists, uploader hidden) */}
           {hasThumb && !showUploader && (
             <div className="w-full">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -536,7 +533,6 @@ function ThumbnailCell({
             </div>
           )}
 
-          {/* ✅ UPLOAD MODE (no thumbnail OR user clicked delete/replace) */}
           {(!hasThumb || showUploader) && (
             <>
               <div className="w-full">
@@ -553,13 +549,11 @@ function ThumbnailCell({
                 <button
                   type="button"
                   onClick={() => {
-                    // If thumb existed, go back to preview
                     if (hasThumb) {
                       setSelectedFile(null);
                       setShowUploader(false);
                       return;
                     }
-                    // If no thumb, just close
                     setOpen(false);
                     setSelectedFile(null);
                   }}
