@@ -6,6 +6,7 @@ interface FormInputProps {
   type?: string;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 export default function FormInput({
@@ -14,6 +15,7 @@ export default function FormInput({
   type = "text",
   placeholder,
   required = true,
+  disabled = false,
 }: FormInputProps) {
   const [field, meta] = useField(name);
 
@@ -28,6 +30,7 @@ export default function FormInput({
         {...field}
         type={type}
         placeholder={placeholder}
+        disabled={disabled}
         className={`
           w-full
           px-4 py-3

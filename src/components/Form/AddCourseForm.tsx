@@ -46,6 +46,7 @@ const courseValidationSchema = Yup.object({
     .max(50, "Type must not exceed 50 characters"),
 
   is_published: Yup.boolean(),
+  free_course: Yup.boolean(),
 });
 
 export type CourseFormValues = {
@@ -56,18 +57,21 @@ export type CourseFormValues = {
   price: string;
   type: string;
   is_published: boolean;
+  free_course: boolean;
 };
 
 function toInitialValues(course?: Course | null): CourseFormValues {
   const title = course?.title ?? "";
+  const price = course?.price != null ? String(course.price) : "";
   return {
     title,
     slug: course?.slug ?? title, // default slug to title
     description: course?.description ?? "",
     language: course?.language ?? "",
-    price: course?.price != null ? String(course.price) : "",
+    price,
     type: course?.type ?? "",
     is_published: course?.is_published ?? false,
+    free_course: course?.price === 0,
   };
 }
 
@@ -95,6 +99,11 @@ export default function CourseForm({
   const handleSubmit = async (values: CourseFormValues) => {
     const title = values.title.trim();
     const slug = title; // ✅ slug = title (as you want)
+    const price = values.free_course
+      ? 0
+      : values.price === ""
+        ? null
+        : Number(values.price);
 
     try {
       if (!isEdit) {
@@ -103,7 +112,7 @@ export default function CourseForm({
           slug, // ✅ slug=title
           description: values.description.trim() || null,
           language: values.language.trim() || null,
-          price: values.price === "" ? null : Number(values.price),
+          price,
           type: values.type.trim() || null,
 
         };
@@ -118,7 +127,7 @@ export default function CourseForm({
           slug, // ✅ slug=title in update too
           description: values.description.trim() || null,
           language: values.language.trim() || null,
-          price: values.price === "" ? null : Number(values.price),
+          price,
           type: values.type.trim() || null,
           is_published: values.is_published, // ✅ include is_published in update
         };
@@ -161,6 +170,13 @@ export default function CourseForm({
             setFieldValue("slug", nextSlug, false);
           }, [values.title, setFieldValue]);
 
+          // when free course is checked, set price to 0
+          useEffect(() => {
+            if (values.free_course) {
+              setFieldValue("price", "0", false);
+            }
+          }, [values.free_course, setFieldValue]);
+
           return (
             <Form className="flex flex-col gap-5">
               <FormInput
@@ -171,12 +187,12 @@ export default function CourseForm({
               />
 
               {/* ✅ slug shown (read-only) and auto-set = title */}
-              <FormInput
+              {/* <FormInput
                 name="slug"
                 label="Slug (auto)"
                 placeholder="Auto from title"
                 required
-              />
+              /> */}
 
               <FormInput
                 name="description"
@@ -192,12 +208,22 @@ export default function CourseForm({
                 required={false}
               />
 
+              <div className="flex items-center gap-3">
+                <Field
+                  type="checkbox"
+                  name="free_course"
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                <label className="text-sm text-slate-700">Free course</label>
+              </div>
+
               <FormInput
                 name="price"
                 label="Price"
                 type="number"
                 placeholder="0 (optional)"
                 required={false}
+                disabled={values.free_course}
               />
 
               <FormInput
