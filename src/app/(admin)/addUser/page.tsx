@@ -11,7 +11,10 @@ import toast from "react-hot-toast";
 import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries";
 import UserAuthForm from "@/components/Form/addUser";
 import SimpleRoleSelectForm from "@/components/Form/Simpleroleselectform";
-import { useAddSubAdminMutation, useDeleteSubAdminMutation } from "@/hooks/useSubAdminMutations";
+import {
+  useAddSubAdminMutation,
+  useDeleteSubAdminMutation,
+} from "@/hooks/useSubAdminMutations";
 import { useAssignRoleMutation } from "@/hooks/useRolePermissionMutations";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
 
@@ -27,7 +30,7 @@ export default function AddUserPage() {
   const addSubAdminMutation = useAddSubAdminMutation();
   const assignRoleMutation = useAssignRoleMutation();
   const deleteSubAdminMutation = useDeleteSubAdminMutation();
- 
+
   const [open, setOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -36,7 +39,13 @@ export default function AddUserPage() {
   const [userToDelete, setUserToDelete] = useState<UserRow | null>(null);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
 
-  const { data: subAdmins, isLoading, isError, error, refetch } = useSubAdminsQuery();
+  const {
+    data: subAdmins,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useSubAdminsQuery();
 
   const users: UserRow[] = useMemo(() => {
     if (!subAdmins) return [];
@@ -46,9 +55,7 @@ export default function AddUserPage() {
       fullName: u.name ?? u.fullName ?? "NA",
       email: u.email ?? u.username ?? "NA",
       role: u.role_name ?? u.role ?? "SUB_ADMIN",
-      createdAt: u.created_at
-        ? new Date(u.created_at).toLocaleString()
-        : "NA",
+      createdAt: u.created_at ? new Date(u.created_at).toLocaleString() : "NA",
     }));
   }, [subAdmins]);
 
@@ -102,14 +109,18 @@ export default function AddUserPage() {
         user_id: selectedUserId,
         role_id: roleId,
       });
-      
+
       toast.success("Role assigned successfully!");
       setRoleModalOpen(false);
       setSelectedUserId(null);
       setSelectedUser(null);
       refetch(); // Refresh the user list
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || error?.message || "Failed to assign role");
+      toast.error(
+        error?.response?.data?.detail ||
+          error?.message ||
+          "Failed to assign role",
+      );
     }
   };
 
@@ -129,7 +140,11 @@ export default function AddUserPage() {
       setDeleteConfirmInput("");
       refetch();
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || error?.message || "Failed to delete user");
+      toast.error(
+        error?.response?.data?.detail ||
+          error?.message ||
+          "Failed to delete user",
+      );
     }
   };
 
@@ -141,14 +156,18 @@ export default function AddUserPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="px-6 pt-10 flex flex-col gap-6 flex-wrap">
+      <div className="px-6 pt-10 flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-800">
             Admin page role
           </h1>
 
-          <SearchBar placeholder="Search Something..." onSearch={() => { }} />
-          <NeumorphismButton name="Add User" icon={<FiPlus />} onClick={handleOpenDrawer} />
+          <SearchBar placeholder="Search Something..." onSearch={() => {}} />
+          <NeumorphismButton
+            name="Add User"
+            icon={<FiPlus />}
+            onClick={handleOpenDrawer}
+          />
         </div>
 
         {/* ✅ Loading + Error UI */}
@@ -165,10 +184,7 @@ export default function AddUserPage() {
           <div className="border border-red-200 bg-red-50 p-3 rounded-lg text-red-700">
             <p>Failed to load sub admins.</p>
             <p className="text-sm opacity-80">{(error as any)?.message}</p>
-            <button
-              className="mt-2 underline"
-              onClick={() => refetch()}
-            >
+            <button className="mt-2 underline" onClick={() => refetch()}>
               Retry
             </button>
           </div>
@@ -188,7 +204,7 @@ export default function AddUserPage() {
 
       {/* Add User Modal */}
       <CommonModal isOpen={open} setIsOpen={setOpen}>
-         <UserAuthForm
+        <UserAuthForm
           onSubmit={async (values, { setSubmitting, setErrors, resetForm }) => {
             try {
               const result = await addSubAdminMutation.mutateAsync({
@@ -205,7 +221,10 @@ export default function AddUserPage() {
               }
             } catch (error: any) {
               setErrors({
-                email: error?.response?.data?.detail || error?.message || "Failed to create user",
+                email:
+                  error?.response?.data?.detail ||
+                  error?.message ||
+                  "Failed to create user",
               });
             } finally {
               setSubmitting(false);
@@ -250,7 +269,8 @@ export default function AddUserPage() {
                 Delete sub-admin
               </h3>
               <p className="text-slate-600 mt-1">
-                Are you sure that you wish to delete this module? This will permanently remove them from sub-admins and cannot be undone.
+                Are you sure that you wish to delete this module? This will
+                permanently remove them from sub-admins and cannot be undone.
               </p>
             </div>
           </div>
@@ -279,8 +299,15 @@ export default function AddUserPage() {
 
           {userToDelete && (
             <div>
-              <label htmlFor="delete-user-confirm" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Type <span className="font-semibold text-slate-900">{userToDelete.email}</span> to confirm
+              <label
+                htmlFor="delete-user-confirm"
+                className="block text-sm font-medium text-slate-700 mb-1.5"
+              >
+                Type{" "}
+                <span className="font-semibold text-slate-900">
+                  {userToDelete.email}
+                </span>{" "}
+                to confirm
               </label>
               <input
                 id="delete-user-confirm"
@@ -307,7 +334,10 @@ export default function AddUserPage() {
             <button
               type="button"
               onClick={handleDeleteConfirm}
-              disabled={deleteSubAdminMutation.isPending || deleteConfirmInput.trim() !== userToDelete?.email}
+              disabled={
+                deleteSubAdminMutation.isPending ||
+                deleteConfirmInput.trim() !== userToDelete?.email
+              }
               className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
             >
               {deleteSubAdminMutation.isPending ? (

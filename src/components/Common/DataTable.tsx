@@ -60,8 +60,8 @@ export default function DataTable<T>({
         <h2 className="text-lg font-semibold text-slate-900 mb-3">{title}</h2>
       ) : null}
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-slate-200 rounded-lg shadow-md">
+      <div className="overflow-x-auto w-full" style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
+        <table className="bg-white border border-slate-200 rounded-lg shadow-md" style={{ width: '100%', minWidth: 'max-content', tableLayout: 'auto' }}>
           <thead className="bg-gray-800 whitespace-nowrap">
             <tr>
               {columns.map((col) => (
@@ -69,8 +69,9 @@ export default function DataTable<T>({
                   key={col.key}
                   className={
                     col.headerClassName ??
-                    "p-4 text-left text-sm font-medium text-white"
+                    "p-4 text-left text-sm font-medium text-white whitespace-nowrap"
                   }
+                  style={{ whiteSpace: 'nowrap' }}
                 >
                   {col.header}
                 </th>
@@ -105,8 +106,9 @@ export default function DataTable<T>({
                         key={col.key}
                         className={
                           col.className ??
-                          "p-4 text-[15px] text-slate-600 font-medium"
+                          "p-4 text-[15px] text-slate-600 font-medium whitespace-nowrap"
                         }
+                        style={{ whiteSpace: 'nowrap' }}
                       >
                         {getCellValue(row, col.accessor)}
                       </td>
