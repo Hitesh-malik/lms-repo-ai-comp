@@ -10,12 +10,11 @@ import {
   IconUserShield,
   IconUserPlus,
   IconBook,
-  IconLogout,
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { logoutApi } from "@/services/authApi";
+import { tokenStore } from "@/lib/token";
+import SpeedDial from "@/components/Common/SpeedDial";
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const links = [
@@ -56,6 +55,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
     },   
   ];
   const [open, setOpen] = useState(false);
+  const token = tokenStore.get();
   return (
     <div
       className={cn(
@@ -94,9 +94,10 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         </SidebarBody>
       </Sidebar>
       <div className="flex flex-1">
-        <div className="flex h-full w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-neutral-200 bg-white p-2 md:p-10 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="flex h-full w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-neutral-200 bg-white p-2  dark:border-neutral-700 dark:bg-neutral-900">
           {children}
         </div>
+        {token && <SpeedDial />}
       </div>
     </div>
   );

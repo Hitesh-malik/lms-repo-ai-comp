@@ -47,14 +47,12 @@ export default function AuthForm({
 
   return (
     <div className="relative w-full min-h-screen bg-white overflow-hidden">
-      {/* ✅ Small error toast-like message (no layout change) */}
       {(signInError || signUpError) && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] bg-red-600 text-white px-4 py-2 rounded-lg text-sm shadow">
           {isSignUpMode ? signUpError : signInError}
         </div>
       )}
 
-      {/* Desktop/Tablet: Animated Background Circle */}
       <div
         className={[
           "absolute bg-gradient-to-br from-[#4481eb] to-[#04befe] rounded-full z-10",
@@ -70,7 +68,6 @@ export default function AuthForm({
         ].join(" ")}
       />
 
-      {/* Mobile: Curved Header Background (Sign In Mode) */}
       <div
         className={[
           "md:hidden absolute top-0 left-0 w-full z-10",
@@ -81,7 +78,6 @@ export default function AuthForm({
         style={{ clipPath: "ellipse(150% 100% at 50% 0%)" }}
       />
 
-      {/* Mobile: Curved Footer Background (Sign Up Mode) */}
       <div
         className={[
           "md:hidden absolute bottom-0 left-0 w-full z-10",
@@ -92,9 +88,7 @@ export default function AuthForm({
         style={{ clipPath: "ellipse(150% 100% at 50% 100%)" }}
       />
 
-      {/* Forms Container */}
       <div className="absolute w-full h-full top-0 left-0">
-        {/* Sign In / Sign Up Forms */}
         <div
           className={[
             "absolute grid grid-cols-1 z-20",
@@ -116,7 +110,6 @@ export default function AuthForm({
             signInData={signInData}
             setSignInData={setSignInData}
             onSubmit={handleSignIn}
-            // ✅ pass loading so Login button can disable/spinner
             loading={signInLoading}
           />
 
@@ -125,14 +118,11 @@ export default function AuthForm({
             signUpData={signUpData}
             setSignUpData={setSignUpData}
             onSubmit={handleSignUp}
-            // ✅ pass loading so Signup button can disable/spinner
             loading={signUpLoading}
           />
         </div>
 
-        {/* Desktop/Tablet: Panels Container */}
         <div className="w-full h-full absolute top-0 left-0 md:grid md:grid-cols-2 hidden">
-          {/* Left Panel */}
           <div
             className={[
               "flex flex-col justify-center items-center text-center z-[13]",
@@ -182,7 +172,6 @@ export default function AuthForm({
             />
           </div>
 
-          {/* Right Panel */}
           <div
             className={[
               "flex flex-col justify-center items-center text-center z-[13]",
@@ -233,9 +222,7 @@ export default function AuthForm({
           </div>
         </div>
 
-        {/* Mobile: Panel Content Overlay */}
         <div className="md:hidden absolute w-full h-full top-0 left-0 pointer-events-none">
-          {/* Sign In Mode - top */}
           <div
             className={[
               "absolute top-0 left-0 w-full z-[13]",
@@ -269,7 +256,6 @@ export default function AuthForm({
             </div>
           </div>
 
-          {/* Sign Up Mode - bottom */}
           <div
             className={[
               "absolute bottom-0 left-0 w-full z-[13]",

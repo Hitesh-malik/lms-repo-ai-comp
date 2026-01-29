@@ -14,6 +14,8 @@ export default function AuthPage() {
   return (
     <>
       <AuthForm
+        signInLoading={login.isPending}
+        signUpLoading={signup.isPending}
         onSignIn={(data) =>
           login.mutate(data, {
             onSuccess: (data) => {
@@ -42,7 +44,7 @@ export default function AuthPage() {
             },
           })
         }
-      />    
+      />
     </>
   );
 }

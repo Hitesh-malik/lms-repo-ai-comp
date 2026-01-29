@@ -3,7 +3,6 @@ import { Poppins, Roboto } from "next/font/google";
 import "./globals.css";
 import { TanstackProvider } from "@/components/providers/tanstack-provider";
 import { Toaster } from "react-hot-toast";
-import SpeedDial from "@/components/Common/SpeedDial";
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -34,7 +33,6 @@ export default function RootLayout({
         <TanstackProvider>
           {children}
           <Toaster />
-          <SpeedDial />
         </TanstackProvider>
       </body>
     </html>

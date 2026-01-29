@@ -1,5 +1,5 @@
 import React from "react";
-import { FaUser, FaLock } from "react-icons/fa";
+import { FaUser, FaLock, FaSpinner } from "react-icons/fa";
 import AuthInput from "./AuthInput";
 import SocialIcons from "./SocialIcons";
 
@@ -56,15 +56,28 @@ export default function LoginForm({
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={
+          loading ||
+          !signInData.username.trim() ||
+          !signInData.password
+        }
         className={[
           "bg-[#5995fd] hover:bg-[#4d84e2] border-none outline-none rounded-full cursor-pointer",
           "text-white uppercase font-semibold transition-colors duration-300",
           "2xl:h-14 2xl:w-40 2xl:text-base xl:h-12 xl:w-36 xl:text-base lg:h-11 lg:w-32 lg:text-sm md:h-11 md:w-32 md:text-sm sm:h-11 sm:w-32 sm:text-sm h-11 w-32 text-sm my-3 mt-4",
-          loading ? "opacity-70 pointer-events-none" : "",
+          loading || !signInData.username.trim() || !signInData.password
+            ? "opacity-70 pointer-events-none cursor-not-allowed"
+            : "",
         ].join(" ")}
       >
-        {loading ? "Logging in..." : "Login"}
+        {loading ? (
+          <span className="inline-flex items-center justify-center gap-2">
+            <FaSpinner className="animate-spin w-4 h-4" aria-hidden />
+            Logging in...
+          </span>
+        ) : (
+          "Login"
+        )}
       </button>
 
       <p className="py-1.5 2xl:text-base xl:text-base lg:text-sm md:text-sm sm:text-sm text-xs text-center text-gray-600 font-mono">
