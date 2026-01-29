@@ -28,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${poppins.variable} ${roboto.variable} antialiased font-roboto`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${poppins.variable} ${roboto.variable} antialiased font-roboto`} suppressHydrationWarning>
         <TanstackProvider>
           {children}
           <Toaster />
