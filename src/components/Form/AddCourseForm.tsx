@@ -14,6 +14,7 @@ import {
   UpdateCourseBody,
 } from "@/services/courseApi";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 const courseValidationSchema = Yup.object({
@@ -128,13 +129,12 @@ export default function CourseForm({
 
       onClose();
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { detail?: string } }; message?: string })
-          ?.response?.data?.detail ??
-        (err as { message?: string })?.message ??
-        (isEdit ? "Failed to update course" : "Failed to create course");
-
-      toast.error(message);
+      toast.error(
+        getApiErrorMessage(
+          err,
+          isEdit ? "Failed to update course" : "Failed to create course"
+        )
+      );
     }
   };
 

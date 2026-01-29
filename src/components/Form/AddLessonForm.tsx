@@ -6,6 +6,7 @@ import FormInput from "@/components/Common/FormInput";
 import FormSelect from "@/components/Common/FormSelect";
 import { useAddLessonMutation } from "@/hooks/useCourseMutations";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 const addLessonValidationSchema = Yup.object({
@@ -72,12 +73,7 @@ export default function AddLessonForm({
       toast.success("Lesson created successfully!");
       onClose();
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { detail?: string } }; message?: string })
-          ?.response?.data?.detail ??
-        (err as { message?: string })?.message ??
-        "Failed to add lesson";
-      toast.error(message);
+      toast.error(getApiErrorMessage(err, "Failed to add lesson"));
     }
   };
 

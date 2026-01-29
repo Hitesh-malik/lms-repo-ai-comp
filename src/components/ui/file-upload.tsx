@@ -55,6 +55,12 @@ export const FileUpload = ({
     },
   });
 
+  // Native input accept string (e.g. "image/jpeg,image/png,application/pdf")
+  const acceptStr =
+    typeof accept === "object" && accept !== null
+      ? Object.keys(accept).join(",")
+      : "image/jpeg,image/png,image/webp";
+
   return (
     <div className="w-full" {...getRootProps()}>
       <motion.div
@@ -66,8 +72,7 @@ export const FileUpload = ({
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
-          // ✅ matches dropzone accept (images)
-          accept="image/jpeg,image/png,image/webp"
+          accept={acceptStr}
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />

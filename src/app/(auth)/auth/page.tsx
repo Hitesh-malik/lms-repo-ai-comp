@@ -4,6 +4,7 @@ import AuthForm from "@/components/auth/AuthForm";
 import { useLoginMutation, useSignupMutation } from "@/hooks/useAuthMutations";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function AuthPage() {
             },
             onError: (error) => {
               console.log("error", error);
-              toast.error((error as any).response.data.detail || "Login failed");
+              toast.error(getApiErrorMessage(error, "Login failed"));
             },
           })
         }
@@ -40,7 +41,7 @@ export default function AuthPage() {
             },
             onError: (error) => {
               console.log("error", error);
-              toast.error((error as any).response.data.detail || "Login failed");
+              toast.error(getApiErrorMessage(error, "Signup failed"));
             },
           })
         }

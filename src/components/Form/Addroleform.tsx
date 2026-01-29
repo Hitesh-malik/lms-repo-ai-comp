@@ -3,6 +3,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 import PermissionTreeView from "../Common/Permissiontreeview";
 import {
   useCreateRoleMutation,
@@ -145,13 +146,14 @@ export default function AddRoleForm({
       resetForm();
       setSelectedPermissions(new Set());
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting form:", error);
-      const errorMessage =
-        error?.response?.data?.detail ||
-        error?.message ||
-        (isEditMode ? "Failed to update role" : "Failed to create role");
-      toast.error(errorMessage);
+      toast.error(
+        getApiErrorMessage(
+          error,
+          isEditMode ? "Failed to update role" : "Failed to create role"
+        )
+      );
     } finally {
       setSubmitting(false);
     }

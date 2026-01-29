@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 
 import { useRoleAndPermissionQuery } from "@/hooks/useRolePermissionQueries";
 import { useDeleteRoleMutation } from "@/hooks/useRolePermissionMutations";
@@ -80,12 +81,8 @@ export default function AddUserPage() {
       setRoleToDelete(null);
       setDeleteConfirmInput("");
       refetch();
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.detail ||
-          error?.message ||
-          "Failed to delete role"
-      );
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Failed to delete role"));
     }
   };
 

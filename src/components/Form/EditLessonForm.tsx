@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import FormInput from "@/components/Common/FormInput";
 import { useUpdateLessonMutation } from "@/hooks/useCourseMutations";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { Lesson } from "@/services/courseApi";
 
@@ -80,12 +81,7 @@ export default function EditLessonForm({ slug, lesson, onClose }: EditLessonForm
       toast.success("Lesson updated successfully!");
       onClose();
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { detail?: string } }; message?: string })
-          ?.response?.data?.detail ??
-        (err as { message?: string })?.message ??
-        "Failed to update lesson";
-      toast.error(message);
+      toast.error(getApiErrorMessage(err, "Failed to update lesson"));
     }
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useCourseContentAdminQuery } from "@/hooks/useCourseQueries";
+import { useCourseContentAdminQuery, useLessonAdminQuery } from "@/hooks/useCourseQueries";
 import CommonModal from "@/components/Common/modal";
 import AddModuleForm from "@/components/Form/AddModuleForm";
 import AddLessonForm from "@/components/Form/AddLessonForm";
@@ -12,12 +12,15 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { Lesson, Module } from "@/services/courseApi";
-import { useState } from "react";
+import { deleteLessonVideoApi, Lesson, LessonAdmin, Module } from "@/services/courseApi";
+import { useState, useCallback } from "react";
 import { FiPlus } from "react-icons/fi";
 import { ChevronDown, ChevronRight, Settings, RotateCcw, PlayCircle, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { useDeleteLessonMutation, useDeleteModuleMutation } from "@/hooks/useCourseMutations";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
+import { FileUpload } from "@/components/ui/file-upload";
+import { VideoUploader } from "@/components/ui/VideoUploader";
 
 export default function CourseContent() {
   const searchParams = useSearchParams();
@@ -40,8 +43,13 @@ export default function CourseContent() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useCourseContentAdminQuery(slug);
+  const lessonAdminQuery = useLessonAdminQuery(selectedLesson?.id ?? null);
   const deleteLessonMutation = useDeleteLessonMutation(slug);
   const deleteModuleMutation = useDeleteModuleMutation(slug);
+
+  const displayLesson: LessonAdmin | null = selectedLesson
+    ? (lessonAdminQuery.data?.lesson ?? selectedLesson)
+    : null;
 
   const course = data?.course;
   const modules = (data?.modules ?? []).sort((a, b) => a.order_index - b.order_index);
@@ -62,12 +70,7 @@ export default function CourseContent() {
       setModuleToDelete(null);
       setDeleteModuleConfirmInput("");
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { detail?: string } }; message?: string })
-          ?.response?.data?.detail ??
-        (err as { message?: string })?.message ??
-        "Failed to delete module";
-      toast.error(message);
+      toast.error(getApiErrorMessage(err, "Failed to delete module"));
     }
   };
 
@@ -81,12 +84,7 @@ export default function CourseContent() {
       setLessonToDelete(null);
       setDeleteLessonConfirmInput("");
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { detail?: string } }; message?: string })
-          ?.response?.data?.detail ??
-        (err as { message?: string })?.message ??
-        "Failed to delete lesson";
-      toast.error(message);
+      toast.error(getApiErrorMessage(err, "Failed to delete lesson"));
     }
   };
 
@@ -248,7 +246,16 @@ export default function CourseContent() {
             <ResizablePanel defaultSize={75} minSize={50}>
               <div className="h-full overflow-y-auto p-6 bg-white">
                 {selectedLesson ? (
-                  <LessonContent lesson={selectedLesson} />
+                  lessonAdminQuery.isLoading && !lessonAdminQuery.data ? (
+                    <div className="flex min-h-[200px] items-center justify-center text-slate-500">
+                      <p className="text-sm">Loading lesson…</p>
+                    </div>
+                  ) : (
+                    <LessonContent
+                      lesson={displayLesson ?? selectedLesson}
+                      onLessonContentUpdated={() => lessonAdminQuery.refetch()}
+                    />
+                  )
                 ) : (
                   <div className="flex h-full min-h-[320px] items-center justify-center text-slate-500">
                     <p className="text-center text-sm">Select a lesson from the left to view its content.</p>
@@ -719,7 +726,30 @@ function LessonRow({
   );
 }
 
-function LessonContent({ lesson }: { lesson: Lesson }) {
+function LessonContent({
+  lesson,
+  onLessonContentUpdated,
+}: {
+  lesson: LessonAdmin;
+  onLessonContentUpdated?: () => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+  const hasContentUrl = !!lesson.content_url?.trim();
+
+  const handleDeleteVideo = useCallback(async () => {
+    if (!lesson.id || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteLessonVideoApi(lesson.id);
+      toast.success("Video deleted.");
+      onLessonContentUpdated?.();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to delete video"));
+    } finally {
+      setDeleting(false);
+    }
+  }, [lesson.id, deleting, onLessonContentUpdated]);
+
   return (
     <article className="prose prose-slate max-w-none">
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -743,13 +773,77 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
       {lesson.description && (
         <p className="text-slate-600 text-sm leading-relaxed">{lesson.description}</p>
       )}
-      <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/50 p-6 text-center">
-        {lesson.content_uploaded ? (
-          <p className="text-sm text-slate-600">
-            Content ready ({lesson.content_type}). Player or viewer would render here.
-          </p>
+      <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/50 p-6">
+        {hasContentUrl ? (
+          <>
+            <div className="flex items-start justify-between gap-4">
+              <div className="aspect-video w-full max-w-5xl min-h-[28rem] overflow-hidden rounded-md flex-1 min-w-0">
+                <iframe
+                  src={lesson.content_url!}
+                  title={lesson.title}
+                  className="h-full w-full min-h-[28rem]"
+                  allow="autoplay; fullscreen"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleDeleteVideo}
+                disabled={deleting}
+                className="shrink-0 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors"
+                aria-label="Delete video"
+              >
+                {deleting ? (
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {deleting ? "Deleting…" : "Delete video"}
+              </button>
+            </div>
+          </>
+        ) : lesson.content_uploaded ? (
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <p className="text-sm text-slate-600">
+              Content ready ({lesson.content_type}). Player or viewer would render here.
+            </p>
+            {lesson.content_type === "video" && (
+              <button
+                type="button"
+                onClick={handleDeleteVideo}
+                disabled={deleting}
+                className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors"
+                aria-label="Delete video"
+              >
+                {deleting ? (
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {deleting ? "Deleting…" : "Delete video"}
+              </button>
+            )}
+          </div>
+        ) : lesson.content_type === "video" ? (
+          <VideoUploader
+            lessonId={lesson.id}
+            onSuccess={() => {
+              toast.success("Video uploaded successfully.");
+              onLessonContentUpdated?.();
+            }}
+          />
         ) : (
-          <p className="text-sm text-slate-500">No content uploaded for this lesson yet.</p>
+          <FileUpload
+            accept={
+              lesson.content_type === "quiz"
+                ? { "application/pdf": [] }
+                : { "application/pdf": [], "video/mp4": [], "video/webm": [] }
+            }
+            onChange={(files) => {
+              if (files.length > 0) {
+                toast.success(`Selected: ${files[0].name}`);
+              }
+            }}
+          />
         )}
       </div>
     </article>

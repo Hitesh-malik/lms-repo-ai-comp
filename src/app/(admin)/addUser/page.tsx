@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { Trash2, AlertTriangle, Loader2, User } from "lucide-react";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 
 import { useSubAdminsQuery } from "@/hooks/useSubAdminQueries";
 import UserAuthForm from "@/components/Form/addUser";
@@ -108,8 +109,8 @@ export default function AddUserPage() {
       setSelectedUserId(null);
       setSelectedUser(null);
       refetch(); // Refresh the user list
-    } catch (error: any) {
-      toast.error(error?.response?.data?.detail || error?.message || "Failed to assign role");
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Failed to assign role"));
     }
   };
 
@@ -128,8 +129,8 @@ export default function AddUserPage() {
       setUserToDelete(null);
       setDeleteConfirmInput("");
       refetch();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.detail || error?.message || "Failed to delete user");
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Failed to delete user"));
     }
   };
 
@@ -203,9 +204,9 @@ export default function AddUserPage() {
                 resetForm();
                 refetch();
               }
-            } catch (error: any) {
+            } catch (error: unknown) {
               setErrors({
-                email: error?.response?.data?.detail || error?.message || "Failed to create user",
+                email: getApiErrorMessage(error, "Failed to create user"),
               });
             } finally {
               setSubmitting(false);
