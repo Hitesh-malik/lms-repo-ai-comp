@@ -16,6 +16,8 @@ import {
   getCourseThumbnailSignedUrlApi,
   saveCourseThumbnailApi,
   deleteCourseThumbnailApi,
+  UpdateCourseBody,
+  updateCourseApi,
 } from "@/services/courseApi";
 import { courseKeys } from "./useCourseQueries";
 
@@ -35,6 +37,17 @@ export function useCreateCourseMutation() {
 
   return useMutation({
     mutationFn: (body: CreateCourseBody) => createCourseApi(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.all });
+    },
+  });
+}
+
+export function useUpdateCourseMutation(slug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: UpdateCourseBody) => updateCourseApi(slug, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: courseKeys.all });
     },

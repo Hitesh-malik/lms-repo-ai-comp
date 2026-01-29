@@ -13,6 +13,7 @@ import UserAuthForm from "@/components/Form/addUser";
 import SimpleRoleSelectForm from "@/components/Form/Simpleroleselectform";
 import { useAddSubAdminMutation, useDeleteSubAdminMutation } from "@/hooks/useSubAdminMutations";
 import { useAssignRoleMutation } from "@/hooks/useRolePermissionMutations";
+import { SkeletonTable } from "@/components/ui/skeleton-table";
 
 type UserRow = {
   id: string;
@@ -148,7 +149,14 @@ export default function AddUserPage() {
         </div>
 
         {/* ✅ Loading + Error UI */}
-        {isLoading && <p className="text-slate-600">Loading sub admins...</p>}
+        {isLoading && (
+          <SkeletonTable
+            title="Users"
+            columnCount={4}
+            rowCount={5}
+            showActions
+          />
+        )}
 
         {isError && (
           <div className="border border-red-200 bg-red-50 p-3 rounded-lg text-red-700">

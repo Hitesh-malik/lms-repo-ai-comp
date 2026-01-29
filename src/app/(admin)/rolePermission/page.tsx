@@ -12,6 +12,7 @@ import { useRoleAndPermissionQuery } from "@/hooks/useRolePermissionQueries";
 import { useDeleteRoleMutation } from "@/hooks/useRolePermissionMutations";
 import { Role } from "@/services/roleAndPermissionApi";
 import AddRoleForm from "@/components/Form/Addroleform";
+import { SkeletonTable } from "@/components/ui/skeleton-table";
 
 export default function AddUserPage() {
   const [open, setOpen] = useState(false);
@@ -103,7 +104,14 @@ export default function AddUserPage() {
           <NeumorphismButton name="Add Role" icon={<FiPlus />} onClick={handleOpenDrawer} />
         </div>
 
-        {isLoading && <p className="text-slate-600">Loading role & permission...</p>}
+        {isLoading && (
+          <SkeletonTable
+            title="Role"
+            columnCount={1}
+            rowCount={5}
+            showActions
+          />
+        )}
 
         {isError && (
           <div className="border border-red-200 bg-red-50 p-3 rounded-lg text-red-700">

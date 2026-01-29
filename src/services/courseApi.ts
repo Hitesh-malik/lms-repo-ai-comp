@@ -46,6 +46,22 @@ export async function createCourseApi(body: CreateCourseBody): Promise<CreateCou
   return res.data;
 }
 
+export type UpdateCourseBody = {
+  title?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  language?: string | null;
+  price?: number | null;
+  type?: string | null;
+  is_published?: boolean | null;
+};
+export type UpdateCourseRes = Course;
+export async function updateCourseApi(slug: string, body: UpdateCourseBody): Promise<UpdateCourseRes> {
+  const res = await api.put<UpdateCourseRes>(`/api/v1/courses/${slug}`, body);
+  return res.data;
+}
+
+
 // ——— Course thumbnail upload ———
 export type GetThumbnailSignedUrlBody = {
   file_type: "image/jpeg" | "image/png" | "image/webp";

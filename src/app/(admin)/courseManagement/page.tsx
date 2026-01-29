@@ -3,7 +3,6 @@
 import DataTable, { Column } from "@/components/Common/DataTable";
 import CommonModal from "@/components/Common/modal";
 import { SearchBar } from "@/components/Common/searchBar";
-import AddCourseForm from "@/components/Form/AddCourseForm";
 import { useCoursesAdminQuery } from "@/hooks/useCourseQueries";
 import {
   useDeleteCourseMutation,
@@ -20,12 +19,16 @@ import { FiPlus } from "react-icons/fi";
 import { Trash2, AlertTriangle, Loader2, UploadCloud } from "lucide-react";
 import toast from "react-hot-toast";
 import { FileUpload } from "@/components/ui/file-upload";
+import CourseForm from "@/components/Form/AddCourseForm";
+import { SkeletonTable } from "@/components/ui/skeleton-table";
 
 export default function CourseManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [addCourseModalOpen, setAddCourseModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [courseModalOpen, setCourseModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   const router = useRouter();
   const { data: courses, isLoading, isError, error, refetch } =
@@ -107,7 +110,7 @@ export default function CourseManagementPage() {
       header: "Price",
       accessor: (row) => (
         <span className="text-slate-900 font-semibold">
-          {row.price != null ? `$${Number(row.price).toFixed(2)}` : "—"}
+          {row.price != null ? `${Number(row.price).toFixed(2)} INR` : "—"}
         </span>
       ),
     },
@@ -149,15 +152,24 @@ export default function CourseManagementPage() {
     },
   ];
 
-  const handleAddCourse = () => setAddCourseModalOpen(true);
+  const handleAddCourse = () => {
+    setModalMode("create");
+    setSelectedCourse(null);
+    setCourseModalOpen(true);
+  };
+
+  const handleEditCourse = (row: Course) => {
+    setModalMode("edit");
+    setSelectedCourse(row);
+    setCourseModalOpen(true);
+  };
+
 
   const handleViewCourse = (row: Course) => {
     router.push(`/course?slug=${encodeURIComponent(row.slug ?? "")}`);
   };
 
-  const handleEditCourse = (_row: Course) => {
-    // TODO: open Edit Course modal
-  };
+
 
   const handleDeleteCourse = (row: Course) => {
     setCourseToDelete(row);
@@ -207,7 +219,14 @@ export default function CourseManagementPage() {
           />
         </div>
 
-        {isLoading && <p className="text-slate-600">Loading courses...</p>}
+        {isLoading && (
+          <SkeletonTable
+            title="Courses"
+            columnCount={9}
+            rowCount={5}
+            showActions
+          />
+        )}
 
         {isError && (
           <div className="border border-red-200 bg-red-50 p-3 rounded-lg text-red-700">
@@ -232,9 +251,16 @@ export default function CourseManagementPage() {
         )}
       </div>
 
-      {/* Add Course modal */}
-      <CommonModal isOpen={addCourseModalOpen} setIsOpen={setAddCourseModalOpen}>
-        <AddCourseForm onClose={() => setAddCourseModalOpen(false)} />
+      <CommonModal isOpen={courseModalOpen} setIsOpen={setCourseModalOpen}>
+        <CourseForm
+          mode={modalMode}
+          course={selectedCourse}
+          onClose={() => {
+            setCourseModalOpen(false);
+            setSelectedCourse(null);
+            refetch();
+          }}
+        />
       </CommonModal>
 
       {/* Delete confirmation modal */}
@@ -346,7 +372,7 @@ function ThumbnailCell({
 
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showUploader, setShowUploader] = useState(false); 
+  const [showUploader, setShowUploader] = useState(false);
 
   const hasThumb = Boolean(course.thumbnail_url);
 
@@ -355,7 +381,7 @@ function ThumbnailCell({
 
   const openModal = () => {
     setSelectedFile(null);
-    setShowUploader(!hasThumb); 
+    setShowUploader(!hasThumb);
     setOpen(true);
   };
 

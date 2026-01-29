@@ -54,13 +54,6 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         <IconBook className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },   
-    {
-      label: "Settings",
-      href: "#",
-      icon: (
-        <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-    },
   ];
   const [open, setOpen] = useState(false);
   return (
@@ -78,7 +71,6 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
               {links.map((link, idx) => (
                 <SidebarLink key={idx} link={link} />
               ))}
-              <PlatformMenu />
             </div>
           </div>
           <div>
