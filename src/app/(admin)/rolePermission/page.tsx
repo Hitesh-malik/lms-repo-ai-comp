@@ -19,6 +19,7 @@ export default function AddUserPage() {
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
 
   const { data: roleAndPermission, isLoading, isError, error, refetch } = useRoleAndPermissionQuery();
   const deleteRoleMutation = useDeleteRoleMutation();
@@ -77,6 +78,7 @@ export default function AddUserPage() {
       toast.success("Role deleted successfully!");
       setDeleteConfirmOpen(false);
       setRoleToDelete(null);
+      setDeleteConfirmInput("");
       refetch();
     } catch (error: any) {
       toast.error(
@@ -90,6 +92,7 @@ export default function AddUserPage() {
   const handleDeleteCancel = () => {
     setDeleteConfirmOpen(false);
     setRoleToDelete(null);
+    setDeleteConfirmInput("");
   };
 
   return (
@@ -153,7 +156,10 @@ export default function AddUserPage() {
         isOpen={deleteConfirmOpen}
         setIsOpen={(open) => {
           setDeleteConfirmOpen(open);
-          if (!open) setRoleToDelete(null);
+          if (!open) {
+            setRoleToDelete(null);
+            setDeleteConfirmInput("");
+          }
         }}
       >
         <div className="flex flex-col gap-5 py-2">
@@ -194,6 +200,23 @@ export default function AddUserPage() {
             </div>
           )}
 
+          {roleToDelete && (
+            <div>
+              <label htmlFor="delete-role-confirm" className="block text-sm font-medium text-slate-700 mb-1.5">
+                Type <span className="font-semibold text-slate-900">{roleToDelete.name}</span> to confirm
+              </label>
+              <input
+                id="delete-role-confirm"
+                type="text"
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                placeholder={`Enter "${roleToDelete.name}"`}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                autoComplete="off"
+              />
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
             <button
@@ -207,7 +230,7 @@ export default function AddUserPage() {
             <button
               type="button"
               onClick={handleDeleteConfirm}
-              disabled={deleteRoleMutation.isPending}
+              disabled={deleteRoleMutation.isPending || deleteConfirmInput.trim() !== roleToDelete?.name}
               className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
             >
               {deleteRoleMutation.isPending ? (

@@ -26,6 +26,7 @@ export default function CourseManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -183,6 +184,7 @@ export default function CourseManagementPage() {
       toast.success("Course deleted successfully!");
       setDeleteConfirmOpen(false);
       setCourseToDelete(null);
+      setDeleteConfirmInput("");
       refetch();
     } catch (err: unknown) {
       const message =
@@ -197,6 +199,7 @@ export default function CourseManagementPage() {
   const handleDeleteCancel = () => {
     setDeleteConfirmOpen(false);
     setCourseToDelete(null);
+    setDeleteConfirmInput("");
   };
 
   return (
@@ -268,7 +271,10 @@ export default function CourseManagementPage() {
         isOpen={deleteConfirmOpen}
         setIsOpen={(open) => {
           setDeleteConfirmOpen(open);
-          if (!open) setCourseToDelete(null);
+          if (!open) {
+            setCourseToDelete(null);
+            setDeleteConfirmInput("");
+          }
         }}
       >
         <div className="flex flex-col gap-5 py-2">
@@ -308,6 +314,23 @@ export default function CourseManagementPage() {
             </div>
           )}
 
+          {courseToDelete && (
+            <div>
+              <label htmlFor="delete-course-confirm" className="block text-sm font-medium text-slate-700 mb-1.5">
+                Type <span className="font-semibold text-slate-900">{courseToDelete.slug}</span> to confirm
+              </label>
+              <input
+                id="delete-course-confirm"
+                type="text"
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                placeholder={`Enter "${courseToDelete.slug}"`}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                autoComplete="off"
+              />
+            </div>
+          )}
+
           <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
             <button
               type="button"
@@ -320,7 +343,7 @@ export default function CourseManagementPage() {
             <button
               type="button"
               onClick={handleDeleteConfirm}
-              disabled={deleteCourseMutation.isPending}
+              disabled={deleteCourseMutation.isPending || deleteConfirmInput.trim() !== courseToDelete?.slug}
               className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
             >
               {deleteCourseMutation.isPending ? (

@@ -34,6 +34,8 @@ export default function CourseContent() {
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
   const [deleteModuleConfirmOpen, setDeleteModuleConfirmOpen] = useState(false);
   const [moduleToDelete, setModuleToDelete] = useState<Module | null>(null);
+  const [deleteLessonConfirmInput, setDeleteLessonConfirmInput] = useState("");
+  const [deleteModuleConfirmInput, setDeleteModuleConfirmInput] = useState("");
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
@@ -58,6 +60,7 @@ export default function CourseContent() {
         setSelectedLesson(null);
       setDeleteModuleConfirmOpen(false);
       setModuleToDelete(null);
+      setDeleteModuleConfirmInput("");
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { detail?: string } }; message?: string })
@@ -76,6 +79,7 @@ export default function CourseContent() {
       if (selectedLesson?.id === lessonToDelete.id) setSelectedLesson(null);
       setDeleteLessonConfirmOpen(false);
       setLessonToDelete(null);
+      setDeleteLessonConfirmInput("");
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { detail?: string } }; message?: string })
@@ -323,7 +327,10 @@ export default function CourseContent() {
         isOpen={deleteLessonConfirmOpen}
         setIsOpen={(open) => {
           setDeleteLessonConfirmOpen(open);
-          if (!open) setLessonToDelete(null);
+          if (!open) {
+            setLessonToDelete(null);
+            setDeleteLessonConfirmInput("");
+          }
         }}
       >
         <div className="flex flex-col gap-5 py-2">
@@ -347,12 +354,29 @@ export default function CourseContent() {
               <p className="text-sm text-slate-600 mt-0.5">{lessonToDelete.content_type}</p>
             </div>
           )}
+          {lessonToDelete && (
+            <div>
+              <label htmlFor="delete-lesson-confirm" className="block text-sm font-medium text-slate-700 mb-1.5">
+                Type <span className="font-semibold text-slate-900">{lessonToDelete.title}</span> to confirm
+              </label>
+              <input
+                id="delete-lesson-confirm"
+                type="text"
+                value={deleteLessonConfirmInput}
+                onChange={(e) => setDeleteLessonConfirmInput(e.target.value)}
+                placeholder={`Enter "${lessonToDelete.title}"`}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                autoComplete="off"
+              />
+            </div>
+          )}
           <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
             <button
               type="button"
               onClick={() => {
                 setDeleteLessonConfirmOpen(false);
                 setLessonToDelete(null);
+                setDeleteLessonConfirmInput("");
               }}
               disabled={deleteLessonMutation.isPending}
               className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
@@ -362,7 +386,7 @@ export default function CourseContent() {
             <button
               type="button"
               onClick={handleDeleteLessonConfirm}
-              disabled={deleteLessonMutation.isPending}
+              disabled={deleteLessonMutation.isPending || deleteLessonConfirmInput.trim() !== lessonToDelete?.title}
               className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
             >
               {deleteLessonMutation.isPending ? (
@@ -385,7 +409,10 @@ export default function CourseContent() {
         isOpen={deleteModuleConfirmOpen}
         setIsOpen={(open) => {
           setDeleteModuleConfirmOpen(open);
-          if (!open) setModuleToDelete(null);
+          if (!open) {
+            setModuleToDelete(null);
+            setDeleteModuleConfirmInput("");
+          }
         }}
       >
         <div className="flex flex-col gap-5 py-2">
@@ -411,12 +438,29 @@ export default function CourseContent() {
               </p>
             </div>
           )}
+          {moduleToDelete && (
+            <div>
+              <label htmlFor="delete-module-confirm" className="block text-sm font-medium text-slate-700 mb-1.5">
+                Type <span className="font-semibold text-slate-900">{moduleToDelete.title}</span> to confirm
+              </label>
+              <input
+                id="delete-module-confirm"
+                type="text"
+                value={deleteModuleConfirmInput}
+                onChange={(e) => setDeleteModuleConfirmInput(e.target.value)}
+                placeholder={`Enter "${moduleToDelete.title}"`}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                autoComplete="off"
+              />
+            </div>
+          )}
           <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
             <button
               type="button"
               onClick={() => {
                 setDeleteModuleConfirmOpen(false);
                 setModuleToDelete(null);
+                setDeleteModuleConfirmInput("");
               }}
               disabled={deleteModuleMutation.isPending}
               className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
@@ -426,7 +470,7 @@ export default function CourseContent() {
             <button
               type="button"
               onClick={handleDeleteModuleConfirm}
-              disabled={deleteModuleMutation.isPending}
+              disabled={deleteModuleMutation.isPending || deleteModuleConfirmInput.trim() !== moduleToDelete?.title}
               className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
             >
               {deleteModuleMutation.isPending ? (
