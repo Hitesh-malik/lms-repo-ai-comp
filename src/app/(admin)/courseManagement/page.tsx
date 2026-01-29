@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { FiPlus } from "react-icons/fi";
 import { Trash2, AlertTriangle, Loader2, UploadCloud } from "lucide-react";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/file-upload";
 import CourseForm from "@/components/Form/AddCourseForm";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
@@ -187,12 +188,7 @@ export default function CourseManagementPage() {
       setDeleteConfirmInput("");
       refetch();
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { detail?: string } }; message?: string })
-          ?.response?.data?.detail ??
-        (err as { message?: string })?.message ??
-        "Failed to delete course";
-      toast.error(message);
+      toast.error(getApiErrorMessage(err, "Failed to delete course"));
     }
   };
 

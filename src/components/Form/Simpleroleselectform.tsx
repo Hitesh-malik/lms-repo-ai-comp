@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { User, Shield, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 import { useRoleAndPermissionQuery } from "@/hooks/useRolePermissionQueries";
 
 interface SimpleRoleSelectFormProps {
@@ -48,9 +49,9 @@ export default function SimpleRoleSelectForm({
             }
             // Don't show success toast here - let the parent handle it
             setSelectedRole("");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error:", error);
-            toast.error(error?.response?.data?.detail || error?.message || "Failed to assign role");
+            toast.error(getApiErrorMessage(error, "Failed to assign role"));
         } finally {
             setIsSubmitting(false);
         }

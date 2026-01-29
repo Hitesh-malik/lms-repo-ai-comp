@@ -150,6 +150,7 @@ export type AddModuleBody = {
   title: string;
   description?: string | null;
   order_index: number;
+  content_type: "module";
 };
 
 export type AddModuleRes = {
@@ -159,6 +160,10 @@ export type AddModuleRes = {
 };
 
 export async function addModuleApi(slug: string, body: AddModuleBody): Promise<AddModuleRes> {
+  body = {
+    ...body,
+    content_type: "module",
+  };
   const res = await api.post<AddModuleRes>(`/api/v1/module/${slug}`, body);
   return res.data;
 }
@@ -226,5 +231,44 @@ export async function updateLessonApi(
 // ——— Delete lesson ———
 export async function deleteLessonApi(lessonId: string): Promise<null> {
   const res = await api.delete<null>(`/api/v1/lesson/${lessonId}`);
+  return res.data;
+}
+
+// ——— Get lesson (admin) — includes content_url for embed
+export type LessonAdmin = Lesson & { content_url?: string | null };
+
+export type GetLessonAdminRes = {
+  success: boolean;
+  lesson: LessonAdmin;
+};
+
+export async function getLessonAdminApi(lessonId: string): Promise<GetLessonAdminRes> {
+  const res = await api.get<GetLessonAdminRes>(`/api/v1/lesson/admin/${lessonId}`);
+  return res.data;
+}
+
+// ——— Lesson video upload (TUS credentials from backend) ———
+export type LessonUploadVideoRes = {
+  success: boolean;
+  detail: string;
+  upload: {
+    video_id: string;
+    library_id: string;
+    expiration_time: number;
+    signature: string;
+    tus_endpoint: string;
+  };
+};
+
+export async function getLessonUploadVideoApi(lessonId: string): Promise<LessonUploadVideoRes> {
+  const res = await api.post<LessonUploadVideoRes>(
+    `/api/v1/lesson/upload-video/${lessonId}`
+  );
+  return res.data;
+}
+
+// ——— Delete lesson video ———
+export async function deleteLessonVideoApi(lessonId: string): Promise<null> {
+  const res = await api.delete<null>(`/api/v1/lesson/delete-video/${lessonId}`);
   return res.data;
 }

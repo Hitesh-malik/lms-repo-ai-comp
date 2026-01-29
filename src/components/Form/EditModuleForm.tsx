@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import FormInput from "@/components/Common/FormInput";
 import { useUpdateModuleMutation } from "@/hooks/useCourseMutations";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { Module } from "@/services/courseApi";
 
@@ -76,12 +77,7 @@ export default function EditModuleForm({ slug, module: mod, onClose }: EditModul
       toast.success("Module updated successfully!");
       onClose();
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { detail?: string } }; message?: string })
-          ?.response?.data?.detail ??
-        (err as { message?: string })?.message ??
-        "Failed to update module";
-      toast.error(message);
+      toast.error(getApiErrorMessage(err, "Failed to update module"));
     }
   };
 
