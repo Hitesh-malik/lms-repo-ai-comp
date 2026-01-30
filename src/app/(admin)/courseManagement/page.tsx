@@ -16,7 +16,8 @@ import {
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiPlus } from "react-icons/fi";
-import { Trash2, AlertTriangle, Loader2, UploadCloud } from "lucide-react";
+import { Trash2, AlertTriangle, Loader2, UploadCloud, LayoutGrid, List } from "lucide-react";
+import { IconEdit, IconEye, IconTrash } from "@tabler/icons-react";
 import toast from "react-hot-toast";
 import { getApiErrorMessage } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -31,6 +32,7 @@ export default function CourseManagementPage() {
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "card">("grid");
 
   const router = useRouter();
   const { data: courses, isLoading, isError, error, refetch } =
@@ -201,21 +203,49 @@ export default function CourseManagementPage() {
   return (
     <main className="min-h-screen bg-white">
       <div className="px-6 pt-10 flex flex-col gap-6 flex-wrap">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap ">
           <h1 className="text-2xl font-semibold text-slate-800">
             Course Management
           </h1>
 
-          <SearchBar
-            placeholder="Search courses..."
-            onSearch={(value) => setSearchQuery(value)}
-          />
+            <SearchBar
+              placeholder="Search courses..."
+              onSearch={(value) => setSearchQuery(value)}
+            />
+          <div className="flex items-center gap-3 ">
+            <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                title="Table view"
+                className={`rounded-md p-2 transition-colors ${
+                  viewMode === "grid"
+                    ? "bg-slate-100 text-slate-800"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                }`}
+              >
+                <List className="h-5 w-5" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("card")}
+                title="Card view"
+                className={`rounded-md p-2 transition-colors ${
+                  viewMode === "card"
+                    ? "bg-slate-100 text-slate-800"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                }`}
+              >
+                <LayoutGrid className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
 
-          <NeumorphismButton
-            name="Add Course"
-            icon={<FiPlus />}
-            onClick={handleAddCourse}
-          />
+            <NeumorphismButton
+              name="Add Course"
+              icon={<FiPlus />}
+              onClick={handleAddCourse}
+            />
+            </div>
         </div>
 
         {isLoading && (
@@ -237,7 +267,7 @@ export default function CourseManagementPage() {
           </div>
         )}
 
-        {!isLoading && !isError && (
+        {!isLoading && !isError && viewMode === "grid" && (
           <DataTable<Course>
             title="Courses"
             columns={columns}
@@ -247,6 +277,27 @@ export default function CourseManagementPage() {
             onEdit={handleEditCourse}
             onDelete={handleDeleteCourse}
           />
+        )}
+
+        {!isLoading && !isError && viewMode === "card" && (
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 mb-3">Courses</h2>
+            {courseRows.length === 0 ? (
+              <p className="text-slate-600 font-medium py-8 text-center">No courses found</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {courseRows.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    onView={handleViewCourse}
+                    onEdit={handleEditCourse}
+                    onDelete={handleDeleteCourse}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -262,7 +313,7 @@ export default function CourseManagementPage() {
         />
       </CommonModal>
 
-      {/* Delete confirmation modal */}
+  
       <CommonModal
         isOpen={deleteConfirmOpen}
         setIsOpen={(open) => {
@@ -358,6 +409,86 @@ export default function CourseManagementPage() {
         </div>
       </CommonModal>
     </main>
+  );
+}
+
+function CourseCard({
+  course,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  course: Course;
+  onView: (row: Course) => void;
+  onEdit: (row: Course) => void;
+  onDelete: (row: Course) => void;
+}) {
+  return (
+    <div className="flex flex-col rounded-lg bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] dark:bg-neutral-700 md:flex-col overflow-hidden border border-slate-200">
+      <div className="relative w-full aspect-video md:aspect-[4/3] flex-shrink-0 bg-slate-100">
+        {course.thumbnail_url ? (
+          <img
+            className="h-full w-full object-cover"
+            src={course.thumbnail_url}
+            alt={course.title}
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center text-slate-400">
+            <UploadCloud className="w-12 h-12" aria-hidden />
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col justify-start p-4 flex-1">
+        <h5 className="mb-1 text-lg font-medium text-neutral-800 dark:text-neutral-50 line-clamp-1">
+          {course.title}
+        </h5>
+        <p className="text-xs text-slate-500 dark:text-neutral-400 mb-2">{course.slug}</p>
+        <span className="inline-flex w-fit px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 mb-2">
+          {course.type}
+        </span>
+        <p className="mb-2 text-sm text-neutral-600 dark:text-neutral-200 line-clamp-2 flex-1">
+          {course.description ?? "No description"}
+        </p>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-300 mb-3">
+          {course.price != null && (
+            <span className="font-semibold text-slate-700">{Number(course.price).toFixed(2)} INR</span>
+          )}
+          <span>{course.language}</span>
+          <span className={course.is_published ? "text-green-600 font-medium" : ""}>
+            {course.is_published ? "Published" : "Draft"}
+          </span>
+        </div>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
+          Updated {course.updated_at ? new Date(course.updated_at).toLocaleDateString() : "—"}
+        </p>
+        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            title="View"
+            onClick={() => onView(course)}
+            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+          >
+            <IconEye className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            title="Edit"
+            onClick={() => onEdit(course)}
+            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+          >
+            <IconEdit className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            title="Delete"
+            onClick={() => onDelete(course)}
+            className="p-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+          >
+            <IconTrash className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -21,7 +21,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const inputClassName = "w-full outline-none bg-white pl-4 text-sm min-h-9"
 
   return (
-    <div className="bg-white flex px-1 py-1 rounded-full border border-black-700 overflow-hidden mx-auto w-full max-w-xl">
+    <div className="bg-white flex px-1 py-1 rounded-full border border-black-700 overflow-hidden w-full max-w-xl">
         <input
           type="search"
           placeholder={placeholder}
