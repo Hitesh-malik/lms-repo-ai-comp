@@ -74,7 +74,13 @@ export default function CourseManagementPage() {
     {
       key: "thumbnail",
       header: "Thumbnail",
-      accessor: (row) => <ThumbnailCell course={row} onUploaded={refetch} />,
+      accessor: (row) => (
+        <CourseThumbnailEditor
+          course={row}
+          onUploaded={refetch}
+          variant="table"
+        />
+      ),
     },
     {
       key: "title",
@@ -285,7 +291,7 @@ export default function CourseManagementPage() {
             {courseRows.length === 0 ? (
               <p className="text-slate-600 font-medium py-8 text-center">No courses found</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {courseRows.map((course) => (
                   <CourseCard
                     key={course.id}
@@ -293,6 +299,7 @@ export default function CourseManagementPage() {
                     onView={handleViewCourse}
                     onEdit={handleEditCourse}
                     onDelete={handleDeleteCourse}
+                    onThumbnailUpdated={refetch}
                   />
                 ))}
               </div>
@@ -417,36 +424,32 @@ function CourseCard({
   onView,
   onEdit,
   onDelete,
+  onThumbnailUpdated,
 }: {
   course: Course;
   onView: (row: Course) => void;
   onEdit: (row: Course) => void;
   onDelete: (row: Course) => void;
+  onThumbnailUpdated?: () => void;
 }) {
   return (
-    <div className="flex flex-col rounded-lg bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] dark:bg-neutral-700 md:flex-col overflow-hidden border border-slate-200">
-      <div className="relative w-full aspect-video md:aspect-[4/3] flex-shrink-0 bg-slate-100">
-        {course.thumbnail_url ? (
-          <img
-            className="h-full w-full object-cover"
-            src={course.thumbnail_url}
-            alt={course.title}
-          />
-        ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-400">
-            <UploadCloud className="w-12 h-12" aria-hidden />
-          </div>
-        )}
+    <div className="group flex flex-col rounded-xl bg-white shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08),0_8px_24px_-8px_rgba(0,0,0,0.06)] dark:bg-neutral-800 overflow-hidden border border-slate-200/80 hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.12)] hover:border-slate-300/80 transition-all duration-200">
+      <div className="relative w-full aspect-video flex-shrink-0 bg-slate-100 overflow-hidden">
+        <CourseThumbnailEditor
+          course={course}
+          onUploaded={onThumbnailUpdated ?? (() => {})}
+          variant="card"
+        />
       </div>
       <div className="flex flex-col justify-start p-4 flex-1">
-        <h5 className="mb-1 text-lg font-medium text-neutral-800 dark:text-neutral-50 line-clamp-1">
+        <h5 className="mb-1 text-lg font-semibold text-neutral-800 dark:text-neutral-50 line-clamp-1">
           {course.title}
         </h5>
         <p className="text-xs text-slate-500 dark:text-neutral-400 mb-2">{course.slug}</p>
-        <span className="inline-flex w-fit px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 mb-2">
+        <span className="inline-flex w-fit px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 mb-2">
           {course.type}
         </span>
-        <p className="mb-2 text-sm text-neutral-600 dark:text-neutral-200 line-clamp-2 flex-1">
+        <p className="mb-2 text-sm text-neutral-600 dark:text-neutral-200 line-clamp-2 flex-1 min-h-[2.5rem]">
           {course.description ?? "No description"}
         </p>
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-300 mb-3">
@@ -461,7 +464,7 @@ function CourseCard({
         <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
           Updated {course.updated_at ? new Date(course.updated_at).toLocaleDateString() : "—"}
         </p>
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+        <div className="flex items-center gap-1 pt-3 border-t border-slate-100">
           <button
             type="button"
             title="View"
@@ -510,12 +513,14 @@ const NeumorphismButton = ({
   </button>
 );
 
-function ThumbnailCell({
+function CourseThumbnailEditor({
   course,
   onUploaded,
+  variant = "table",
 }: {
   course: Course;
   onUploaded: () => void;
+  variant?: "table" | "card";
 }) {
   const updateThumbnailMutation = useUpdateCourseThumbnailMutation(course.slug);
   const deleteThumbMutation = useDeleteCourseThumbnailMutation(course.slug);
@@ -525,6 +530,7 @@ function ThumbnailCell({
   const [showUploader, setShowUploader] = useState(false);
 
   const hasThumb = Boolean(course.thumbnail_url);
+  const isCard = variant === "card";
 
   const isBusy =
     updateThumbnailMutation.isPending || deleteThumbMutation.isPending;
@@ -614,34 +620,58 @@ function ThumbnailCell({
     }
   };
 
+  const trigger = hasThumb ? (
+    <button
+      type="button"
+      onClick={openModal}
+      className={isCard ? "group/thumb relative h-full w-full block" : "group/thumb relative block"}
+      title="Click to preview/update thumbnail"
+    >
+      <img
+        src={course.thumbnail_url!}
+        alt={course.title}
+        className={
+          isCard
+            ? "h-full w-full object-cover transition-transform group-hover/thumb:scale-105"
+            : "w-20 h-12 rounded-md object-cover border border-slate-200"
+        }
+      />
+      <span
+        className={
+          isCard
+            ? "absolute inset-0 bg-black/0 group-hover/thumb:bg-black/30 transition flex items-center justify-center"
+            : "absolute inset-0 rounded-md bg-black/0 group-hover/thumb:bg-black/20 transition"
+        }
+      >
+        {isCard && (
+          <span className="opacity-0 group-hover/thumb:opacity-100 transition-opacity text-white text-sm font-medium px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm">
+            Update thumbnail
+          </span>
+        )}
+      </span>
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={openModal}
+      className={
+        isCard
+          ? "h-full w-full flex items-center justify-center border border-dashed border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-colors"
+          : "w-20 h-12 rounded-md border border-dashed border-slate-300 flex items-center justify-center hover:bg-slate-50 transition"
+      }
+      title="Upload thumbnail"
+    >
+      <UploadCloud
+        className={isCard ? "w-14 h-14 text-slate-400" : "w-5 h-5 text-slate-500"}
+        aria-hidden
+      />
+    </button>
+  );
+
   return (
     <>
-      {/* TABLE CELL */}
-      <div className="flex items-center">
-        {hasThumb ? (
-          <button
-            type="button"
-            onClick={openModal}
-            className="group relative"
-            title="Click to preview/update thumbnail"
-          >
-            <img
-              src={course.thumbnail_url!}
-              alt={course.title}
-              className="w-20 h-12 rounded-md object-cover border border-slate-200"
-            />
-            <span className="absolute inset-0 rounded-md bg-black/0 group-hover:bg-black/20 transition" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={openModal}
-            className="w-20 h-12 rounded-md border border-dashed border-slate-300 flex items-center justify-center hover:bg-slate-50 transition"
-            title="Upload thumbnail"
-          >
-            <UploadCloud className="w-5 h-5 text-slate-500" />
-          </button>
-        )}
+      <div className={isCard ? "absolute inset-0" : "flex items-center"}>
+        {trigger}
       </div>
 
       {/* MODAL */}

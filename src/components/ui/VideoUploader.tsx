@@ -35,7 +35,7 @@ export function VideoUploader({ lessonId, onSuccess, className }: VideoUploaderP
 
       const { upload: creds } = data;
       const embedUrl = `https://iframe.mediadelivery.net/embed/${creds.library_id}/${creds.video_id}`;
-
+      console.log(embedUrl , "embedUrl" , data);
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
           endpoint: creds.tus_endpoint,
@@ -69,9 +69,9 @@ export function VideoUploader({ lessonId, onSuccess, className }: VideoUploaderP
         });
 
         upload.findPreviousUploads().then((previousUploads) => {
-          if (previousUploads.length > 0) {
-            upload.resumeFromPreviousUpload(previousUploads[0]);
-          }
+          // if (previousUploads.length > 0) {
+          //   upload.resumeFromPreviousUpload(previousUploads[0]);
+          // }
           upload.start();
         });
       });
