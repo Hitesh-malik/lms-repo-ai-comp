@@ -112,6 +112,8 @@ export type Lesson = {
   id: string;
   module_id: string;
   content_id: string | null;
+  /** Quiz ID when content_type is "quiz" (API may return this instead of or in addition to content_id) */
+  quiz_id?: string | null;
   content_type: string;
   content_uploaded: boolean;
   title: string;
@@ -270,5 +272,152 @@ export async function getLessonUploadVideoApi(lessonId: string): Promise<LessonU
 // ——— Delete lesson video ———
 export async function deleteLessonVideoApi(lessonId: string): Promise<null> {
   const res = await api.delete<null>(`/api/v1/lesson/delete-video/${lessonId}`);
+  return res.data;
+}
+
+// ——— Create quiz for lesson ———
+export type CreateQuizForLessonBody = {
+  title: string;
+  description?: string | null;
+  instructions?: string | null;
+  max_attempts?: number;
+  passing_percentage?: number;
+  quiz_type?: string;
+  time_limit_minutes?: number | null;
+};
+
+export type Quiz = {
+  id: string;
+  title: string;
+  description: string | null;
+  instructions: string | null;
+  quiz_type: string;
+  time_limit_minutes: number | null;
+  passing_percentage: number;
+  max_attempts: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function createQuizForLessonApi(
+  lessonId: string,
+  body: CreateQuizForLessonBody
+): Promise<Quiz> {
+  const res = await api.post<Quiz>(
+    `/api/v1/quiz/create-for-lesson/${lessonId}`,
+    body
+  );
+  return res.data;
+}
+
+// ——— Get quiz (admin) ———
+export async function getQuizAdminApi(quizId: string): Promise<Quiz> {
+  const res = await api.get<Quiz>(`/api/v1/quiz/admin/${quizId}`);
+  return res.data;
+}
+
+// ——— Update quiz ———
+export type UpdateQuizBody = {
+  title?: string | null;
+  description?: string | null;
+  instructions?: string | null;
+  quiz_type?: string | null;
+  time_limit_minutes?: number | null;
+  passing_percentage?: number | null;
+  max_attempts?: number | null;
+};
+
+export async function updateQuizApi(
+  quizId: string,
+  body: UpdateQuizBody
+): Promise<Quiz> {
+  const res = await api.put<Quiz>(`/api/v1/quiz/${quizId}`, body);
+  return res.data;
+}
+
+// ——— Delete quiz ———
+export async function deleteQuizApi(quizId: string): Promise<null> {
+  const res = await api.delete<null>(`/api/v1/quiz/${quizId}`);
+  return res.data;
+}
+
+// ——— Get quiz questions (list existing questions) ———
+export type GetQuizQuestionsRes = {
+  questions: QuizQuestion[];
+  total: number;
+};
+
+export async function getQuizQuestionsApi(quizId: string): Promise<GetQuizQuestionsRes> {
+  const res = await api.get<GetQuizQuestionsRes>(`/api/v1/quiz/${quizId}/questions `);
+  return res.data;
+}
+
+// ——— Add quiz question ———
+export type AddQuizQuestionBody = {
+  quiz_id: string;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: string;
+  explanation?: string | null;
+  marks?: number;
+  negative_marks?: number;
+  difficulty_level?: string;
+  order_index?: number;
+};
+
+export type QuizQuestion = {
+  id: string;
+  quiz_id: string;
+  question_text: string;
+  question_type: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: string;
+  explanation: string | null;
+  marks: number;
+  negative_marks: number;
+  difficulty_level: string;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function addQuizQuestionApi(body: AddQuizQuestionBody): Promise<QuizQuestion> {
+  const res = await api.post<QuizQuestion>("/api/v1/quiz/question/add", body);
+  return res.data;
+}
+
+// ——— Update quiz question ———
+export type UpdateQuizQuestionBody = {
+  question_text?: string | null;
+  option_a?: string | null;
+  option_b?: string | null;
+  option_c?: string | null;
+  option_d?: string | null;
+  correct_answer?: string | null;
+  explanation?: string | null;
+  marks?: number | null;
+  negative_marks?: number | null;
+  difficulty_level?: string | null;
+  order_index?: number | null;
+};
+
+export async function updateQuizQuestionApi(
+  questionId: string,
+  body: UpdateQuizQuestionBody
+): Promise<QuizQuestion> {
+  const res = await api.put<QuizQuestion>(`/api/v1/quiz/question/${questionId}`, body);
+  return res.data;
+}
+
+// ——— Delete quiz question ———
+export async function deleteQuizQuestionApi(questionId: string): Promise<null> {
+  const res = await api.delete<null>(`/api/v1/quiz/question/${questionId}`);
   return res.data;
 }

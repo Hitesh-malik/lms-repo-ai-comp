@@ -18,6 +18,16 @@ import {
   deleteCourseThumbnailApi,
   UpdateCourseBody,
   updateCourseApi,
+  createQuizForLessonApi,
+  CreateQuizForLessonBody,
+  addQuizQuestionApi,
+  AddQuizQuestionBody,
+  updateQuizQuestionApi,
+  UpdateQuizQuestionBody,
+  deleteQuizQuestionApi,
+  updateQuizApi,
+  UpdateQuizBody,
+  deleteQuizApi,
 } from "@/services/courseApi";
 import { courseKeys } from "./useCourseQueries";
 
@@ -145,6 +155,78 @@ export function useDeleteCourseThumbnailMutation(slug: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: courseKeys.admin() });
       queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+    },
+  });
+}
+
+export function useCreateQuizForLessonMutation(slug: string, lessonId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: CreateQuizForLessonBody) =>
+      createQuizForLessonApi(lessonId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.contentAdmin(slug) });
+      queryClient.invalidateQueries({ queryKey: courseKeys.lessonAdmin(lessonId) });
+    },
+  });
+}
+
+export function useAddQuizQuestionMutation(quizId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: Omit<AddQuizQuestionBody, "quiz_id">) =>
+      addQuizQuestionApi({ ...body, quiz_id: quizId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+    },
+  });
+}
+
+export function useUpdateQuizQuestionMutation(questionId: string, quizId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: UpdateQuizQuestionBody) =>
+      updateQuizQuestionApi(questionId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.quizQuestions(quizId) });
+    },
+  });
+}
+
+export function useDeleteQuizQuestionMutation(quizId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (questionId: string) => deleteQuizQuestionApi(questionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.quizQuestions(quizId) });
+    },
+  });
+}
+
+export function useUpdateQuizMutation(quizId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: UpdateQuizBody) => updateQuizApi(quizId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.quizAdmin(quizId) });
+      queryClient.invalidateQueries({ queryKey: courseKeys.quizQuestions(quizId) });
+    },
+  });
+}
+
+export function useDeleteQuizMutation(quizId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => deleteQuizApi(quizId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: courseKeys.quizAdmin(quizId) });
+      queryClient.invalidateQueries({ queryKey: courseKeys.quizQuestions(quizId) });
     },
   });
 }

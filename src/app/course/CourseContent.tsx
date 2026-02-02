@@ -1,22 +1,26 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useCourseContentAdminQuery, useLessonAdminQuery } from "@/hooks/useCourseQueries";
+import { useCourseContentAdminQuery, useLessonAdminQuery, useQuizAdminQuery, useQuizQuestionsQuery } from "@/hooks/useCourseQueries";
 import CommonModal from "@/components/Common/modal";
 import AddModuleForm from "@/components/Form/AddModuleForm";
 import AddLessonForm from "@/components/Form/AddLessonForm";
 import EditLessonForm from "@/components/Form/EditLessonForm";
 import EditModuleForm from "@/components/Form/EditModuleForm";
+import CreateQuizForm from "@/components/Form/CreateQuizForm";
+import AddQuestionForm from "@/components/Form/AddQuestionForm";
+import EditQuestionForm from "@/components/Form/EditQuestionForm";
+import EditQuizForm from "@/components/Form/EditQuizForm";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { deleteLessonVideoApi, Lesson, LessonAdmin, Module } from "@/services/courseApi";
-import { useState, useCallback } from "react";
+import { deleteLessonVideoApi, Lesson, LessonAdmin, Module, Quiz, QuizQuestion } from "@/services/courseApi";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { FiPlus } from "react-icons/fi";
 import { ChevronDown, ChevronRight, Settings, RotateCcw, PlayCircle, Pencil, Trash2, AlertTriangle } from "lucide-react";
-import { useDeleteLessonMutation, useDeleteModuleMutation } from "@/hooks/useCourseMutations";
+import { useDeleteLessonMutation, useDeleteModuleMutation, useDeleteQuizQuestionMutation, useUpdateQuizMutation, useDeleteQuizMutation } from "@/hooks/useCourseMutations";
 import toast from "react-hot-toast";
 import { getApiErrorMessage } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -41,18 +45,113 @@ export default function CourseContent() {
   const [deleteModuleConfirmInput, setDeleteModuleConfirmInput] = useState("");
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [createQuizOpen, setCreateQuizOpen] = useState(false);
+  const [addQuestionOpen, setAddQuestionOpen] = useState(false);
+  const [editQuestionOpen, setEditQuestionOpen] = useState(false);
+  const [questionToEdit, setQuestionToEdit] = useState<QuizQuestion | null>(null);
+  const [deleteQuestionConfirmOpen, setDeleteQuestionConfirmOpen] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<QuizQuestion | null>(null);
+  const [editQuizOpen, setEditQuizOpen] = useState(false);
+  const [quizToEdit, setQuizToEdit] = useState<Quiz | null>(null);
+  const [deleteQuizConfirmOpen, setDeleteQuizConfirmOpen] = useState(false);
+  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
+  const [deleteQuizConfirmInput, setDeleteQuizConfirmInput] = useState("");
+  const [createdQuizIdByLesson, setCreatedQuizIdByLesson] = useState<Record<string, string>>({});
 
   const { data, isLoading, isError, error, refetch } = useCourseContentAdminQuery(slug);
-  const lessonAdminQuery = useLessonAdminQuery(selectedLesson?.id ?? null);
-  const deleteLessonMutation = useDeleteLessonMutation(slug);
-  const deleteModuleMutation = useDeleteModuleMutation(slug);
-
-  const displayLesson: LessonAdmin | null = selectedLesson
-    ? (lessonAdminQuery.data?.lesson ?? selectedLesson)
-    : null;
-
   const course = data?.course;
   const modules = (data?.modules ?? []).sort((a, b) => a.order_index - b.order_index);
+
+  const isVideo = selectedLesson?.content_type === "video";
+  const isQuiz = selectedLesson?.content_type === "quiz";
+  const selectedQuizId =
+    selectedLesson && isQuiz
+      ? selectedLesson.quiz_id ?? selectedLesson.content_id ?? createdQuizIdByLesson[selectedLesson.id] ?? null
+      : null;
+
+  const lessonAdminQuery = useLessonAdminQuery(
+    isVideo && selectedLesson?.id ? selectedLesson.id : null
+  );
+  const quizAdminQuery = useQuizAdminQuery(selectedQuizId);
+  const quizQuestionsQuery = useQuizQuestionsQuery(selectedQuizId);
+
+  const displayLesson: LessonAdmin | null = selectedLesson
+    ? isVideo
+      ? (lessonAdminQuery.data?.lesson ?? selectedLesson)
+      : selectedLesson
+    : null;
+
+  const deleteLessonMutation = useDeleteLessonMutation(slug);
+  const deleteModuleMutation = useDeleteModuleMutation(slug);
+  const deleteQuizQuestionMutation = useDeleteQuizQuestionMutation(selectedQuizId ?? "");
+  const deleteQuizMutation = useDeleteQuizMutation(selectedQuizId ?? "");
+
+  const allLessons = modules.flatMap((m) => m.lessons ?? []);
+
+  const hasAppliedInitialHash = useRef(false);
+  const prevSlug = useRef(slug);
+  if (prevSlug.current !== slug) {
+    prevSlug.current = slug;
+    hasAppliedInitialHash.current = false;
+  }
+  useEffect(() => {
+    if (!slug || modules.length === 0 || hasAppliedInitialHash.current) return;
+    const hash = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
+    if (!hash) return;
+    const lessonMatch = /^lesson-(.+)$/.exec(hash);
+    const quizMatch = /^quiz-(.+)$/.exec(hash);
+    if (lessonMatch) {
+      const lesson = allLessons.find((l) => l.id === lessonMatch[1]) ?? null;
+      if (lesson) {
+        setSelectedLesson(lesson);
+        setExpandedModuleId(lesson.module_id);
+        hasAppliedInitialHash.current = true;
+      }
+    } else if (quizMatch) {
+      const lesson =
+        allLessons.find(
+          (l) =>
+            l.content_type === "quiz" &&
+            (l.quiz_id === quizMatch[1] || l.content_id === quizMatch[1])
+        ) ?? null;
+      if (lesson) {
+        setSelectedLesson(lesson);
+        setExpandedModuleId(lesson.module_id);
+        hasAppliedInitialHash.current = true;
+      }
+    }
+  }, [slug, modules.length, allLessons]);
+
+  const handleSelectLesson = useCallback(
+    (lesson: Lesson) => {
+      setSelectedLesson(lesson);
+      const quizId =
+        lesson.content_type === "quiz"
+          ? lesson.quiz_id ?? lesson.content_id ?? createdQuizIdByLesson[lesson.id] ?? null
+          : null;
+      const newHash =
+        lesson.content_type === "video" || (lesson.content_type === "quiz" && !quizId)
+          ? `lesson-${lesson.id}`
+          : `quiz-${quizId}`;
+      if (typeof window !== "undefined") window.location.hash = newHash;
+    },
+    [createdQuizIdByLesson]
+  );
+
+  useEffect(() => {
+    if (!selectedLesson) return;
+    const quizId =
+      selectedLesson.content_type === "quiz"
+        ? selectedLesson.quiz_id ?? selectedLesson.content_id ?? createdQuizIdByLesson[selectedLesson.id] ?? null
+        : null;
+    const newHash =
+      selectedLesson.content_type === "video" ||
+      (selectedLesson.content_type === "quiz" && !quizId)
+        ? `lesson-${selectedLesson.id}`
+        : `quiz-${quizId}`;
+    if (typeof window !== "undefined" && window.location.hash.slice(1) !== newHash)
+      window.location.hash = newHash;
+  }, [selectedLesson, createdQuizIdByLesson]);
 
   const toggleModule = (id: string) => {
     setExpandedModuleId((prev) => (prev === id ? null : id));
@@ -216,7 +315,7 @@ export default function CourseContent() {
                       isExpanded={expandedModuleId === mod.id}
                       selectedLessonId={selectedLesson?.id ?? null}
                       onToggle={() => toggleModule(mod.id)}
-                      onSelectLesson={setSelectedLesson}
+                      onSelectLesson={handleSelectLesson}
                       onAddLesson={(moduleId, moduleTitle) => {
                         setAddLessonModule({ id: moduleId, title: moduleTitle });
                         setAddLessonOpen(true);
@@ -246,14 +345,46 @@ export default function CourseContent() {
             <ResizablePanel defaultSize={75} minSize={50}>
               <div className="h-full overflow-y-auto p-6 bg-white">
                 {selectedLesson ? (
-                  lessonAdminQuery.isLoading && !lessonAdminQuery.data ? (
+                  (isVideo && lessonAdminQuery.isLoading && !lessonAdminQuery.data) ||
+                  (isQuiz && selectedQuizId && quizAdminQuery.isLoading && !quizAdminQuery.data) ? (
                     <div className="flex min-h-[200px] items-center justify-center text-slate-500">
-                      <p className="text-sm">Loading lesson…</p>
+                      <p className="text-sm">Loading…</p>
                     </div>
                   ) : (
                     <LessonContent
                       lesson={displayLesson ?? selectedLesson}
-                      onLessonContentUpdated={() => lessonAdminQuery.refetch()}
+                      quiz={isQuiz && selectedQuizId ? quizAdminQuery.data ?? null : null}
+                      questions={isQuiz && selectedQuizId ? quizQuestionsQuery.data?.questions ?? [] : []}
+                      onLessonContentUpdated={() => {
+                        lessonAdminQuery.refetch();
+                        refetch();
+                      }}
+                      onQuestionsUpdated={() => quizQuestionsQuery.refetch()}
+                      createdQuizId={
+                        selectedLesson
+                          ? createdQuizIdByLesson[selectedLesson.id] ?? null
+                          : null
+                      }
+                      onCreateQuizClick={() => setCreateQuizOpen(true)}
+                      onAddQuestionClick={() => setAddQuestionOpen(true)}
+                      onEditQuestion={(q) => {
+                        setQuestionToEdit(q);
+                        setEditQuestionOpen(true);
+                      }}
+                      onDeleteQuestion={(q) => {
+                        setQuestionToDelete(q);
+                        setDeleteQuestionConfirmOpen(true);
+                      }}
+                      onEditQuiz={(quiz) => {
+                        setQuizToEdit(quiz);
+                        setEditQuizOpen(true);
+                      }}
+                      onDeleteQuiz={(quiz) => {
+                        setQuizToDelete(quiz);
+                        setDeleteQuizConfirmInput("");
+                        setDeleteQuizConfirmOpen(true);
+                      }}
+                      quizId={selectedQuizId}
                     />
                   )
                 ) : (
@@ -310,6 +441,264 @@ export default function CourseContent() {
           />
         </CommonModal>
       )}
+
+      {createQuizOpen && selectedLesson && (
+        <CommonModal isOpen={createQuizOpen} setIsOpen={setCreateQuizOpen}>
+          <CreateQuizForm
+            lessonId={selectedLesson.id}
+            lessonTitle={selectedLesson.title}
+            slug={slug}
+            onSuccess={(quizId) => {
+              setCreatedQuizIdByLesson((prev) => ({
+                ...prev,
+                [selectedLesson.id]: quizId,
+              }));
+              refetch();
+              if (typeof window !== "undefined") window.location.hash = `quiz-${quizId}`;
+            }}
+            onClose={() => setCreateQuizOpen(false)}
+          />
+        </CommonModal>
+      )}
+
+      {addQuestionOpen && selectedLesson && (() => {
+        const quizIdForAdd =
+          selectedLesson.quiz_id ?? selectedLesson.content_id ?? createdQuizIdByLesson[selectedLesson.id];
+        return quizIdForAdd ? (
+          <CommonModal isOpen={addQuestionOpen} setIsOpen={setAddQuestionOpen}>
+            <AddQuestionForm
+              quizId={quizIdForAdd}
+              onSuccess={() => {
+                setAddQuestionOpen(false);
+                quizQuestionsQuery.refetch();
+              }}
+              onClose={() => setAddQuestionOpen(false)}
+            />
+          </CommonModal>
+        ) : null;
+      })()}
+
+      {editQuestionOpen && questionToEdit && selectedQuizId && (
+        <CommonModal
+          isOpen={editQuestionOpen}
+          setIsOpen={(open) => {
+            setEditQuestionOpen(open);
+            if (!open) setQuestionToEdit(null);
+          }}
+        >
+          <EditQuestionForm
+            question={questionToEdit}
+            quizId={selectedQuizId}
+            onSuccess={() => quizQuestionsQuery.refetch()}
+            onClose={() => {
+              setEditQuestionOpen(false);
+              setQuestionToEdit(null);
+            }}
+          />
+        </CommonModal>
+      )}
+
+      {editQuizOpen && quizToEdit && (
+        <CommonModal
+          isOpen={editQuizOpen}
+          setIsOpen={(open) => {
+            setEditQuizOpen(open);
+            if (!open) setQuizToEdit(null);
+          }}
+        >
+          <EditQuizForm
+            quiz={quizToEdit}
+            onSuccess={() => {
+              quizAdminQuery.refetch();
+              quizQuestionsQuery.refetch();
+            }}
+            onClose={() => {
+              setEditQuizOpen(false);
+              setQuizToEdit(null);
+            }}
+          />
+        </CommonModal>
+      )}
+
+      <CommonModal
+        isOpen={deleteQuizConfirmOpen}
+        setIsOpen={(open) => {
+          setDeleteQuizConfirmOpen(open);
+          if (!open) {
+            setQuizToDelete(null);
+            setDeleteQuizConfirmInput("");
+          }
+        }}
+      >
+        <div className="flex flex-col gap-5 py-2">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 p-3 rounded-full bg-red-100 ring-4 ring-red-50">
+              <AlertTriangle className="w-7 h-7 text-red-600" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-semibold text-slate-900">Delete quiz</h3>
+              <p className="text-slate-600 mt-1">
+                This will cascade delete all questions and attempts. This cannot be undone.
+              </p>
+            </div>
+          </div>
+          {quizToDelete && (
+            <>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">
+                  Quiz to remove
+                </p>
+                <p className="font-semibold text-slate-900">{quizToDelete.title}</p>
+              </div>
+              <div>
+                <label htmlFor="delete-quiz-confirm" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Type <span className="font-semibold text-slate-900">{quizToDelete.title}</span> to confirm
+                </label>
+                <input
+                  id="delete-quiz-confirm"
+                  type="text"
+                  value={deleteQuizConfirmInput}
+                  onChange={(e) => setDeleteQuizConfirmInput(e.target.value)}
+                  placeholder={`Enter "${quizToDelete.title}"`}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  autoComplete="off"
+                />
+              </div>
+            </>
+          )}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteQuizConfirmOpen(false);
+                setQuizToDelete(null);
+                setDeleteQuizConfirmInput("");
+              }}
+              disabled={deleteQuizMutation.isPending}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!quizToDelete) return;
+                try {
+                  await deleteQuizMutation.mutateAsync();
+                  toast.success("Quiz deleted.");
+                  setDeleteQuizConfirmOpen(false);
+                  setQuizToDelete(null);
+                  setDeleteQuizConfirmInput("");
+                  setSelectedLesson((prev) =>
+                    prev ? { ...prev, quiz_id: null, content_id: null } : null
+                  );
+                  if (selectedLesson?.id) {
+                    setCreatedQuizIdByLesson((prev) => {
+                      const next = { ...prev };
+                      delete next[selectedLesson.id];
+                      return next;
+                    });
+                    if (typeof window !== "undefined") {
+                      window.location.hash = `lesson-${selectedLesson.id}`;
+                    }
+                  }
+                  refetch();
+                } catch (err: unknown) {
+                  toast.error(getApiErrorMessage(err, "Failed to delete quiz"));
+                }
+              }}
+              disabled={
+                deleteQuizMutation.isPending ||
+                deleteQuizConfirmInput.trim() !== quizToDelete?.title
+              }
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
+            >
+              {deleteQuizMutation.isPending ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" aria-hidden />
+                  Delete quiz
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </CommonModal>
+
+      <CommonModal
+        isOpen={deleteQuestionConfirmOpen}
+        setIsOpen={(open) => {
+          setDeleteQuestionConfirmOpen(open);
+          if (!open) setQuestionToDelete(null);
+        }}
+      >
+        <div className="flex flex-col gap-5 py-2">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 p-3 rounded-full bg-red-100 ring-4 ring-red-50">
+              <AlertTriangle className="w-7 h-7 text-red-600" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-semibold text-slate-900">Delete question</h3>
+              <p className="text-slate-600 mt-1">
+                Are you sure you want to delete this question? This cannot be undone.
+              </p>
+            </div>
+          </div>
+          {questionToDelete && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">
+                Question to remove
+              </p>
+              <p className="font-medium text-slate-900 line-clamp-2">{questionToDelete.question_text}</p>
+            </div>
+          )}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteQuestionConfirmOpen(false);
+                setQuestionToDelete(null);
+              }}
+              disabled={deleteQuizQuestionMutation.isPending}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-medium disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!questionToDelete) return;
+                try {
+                  await deleteQuizQuestionMutation.mutateAsync(questionToDelete.id);
+                  toast.success("Question deleted.");
+                  setDeleteQuestionConfirmOpen(false);
+                  setQuestionToDelete(null);
+                } catch (err: unknown) {
+                  toast.error(getApiErrorMessage(err, "Failed to delete question"));
+                }
+              }}
+              disabled={deleteQuizQuestionMutation.isPending}
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 transition-colors font-medium flex items-center justify-center gap-2 min-w-[130px]"
+            >
+              {deleteQuizQuestionMutation.isPending ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" aria-hidden />
+                  Delete question
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </CommonModal>
 
       {moduleToEdit && (
         <CommonModal
@@ -726,15 +1115,151 @@ function LessonRow({
   );
 }
 
+function QuizQuestionsAccordion({
+  questions,
+  quizIdProp,
+  onEditQuestion,
+  onDeleteQuestion,
+}: {
+  questions: QuizQuestion[];
+  quizIdProp: string | null;
+  onEditQuestion?: (question: QuizQuestion) => void;
+  onDeleteQuestion?: (question: QuizQuestion) => void;
+}) {
+  const sorted = [...questions].sort((a, b) => a.order_index - b.order_index);
+  const [expandedId, setExpandedId] = useState<string | null>(sorted[0]?.id ?? null);
+
+  return (
+    <div className="w-full max-w-3xl text-left">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-700">
+            Existing questions ({questions.length})
+          </h3>
+        </div>
+        <ul className="divide-y divide-slate-100">
+          {sorted.map((q, idx) => {
+            const isExpanded = expandedId === q.id;
+            return (
+              <li key={q.id} className="bg-white">
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(isExpanded ? null : q.id)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50/80 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                  aria-expanded={isExpanded}
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-500" />
+                  )}
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-slate-100 text-xs font-semibold text-slate-700">
+                    {idx + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">
+                    {q.question_text}
+                  </span>
+                </button>
+                {isExpanded && (
+                  <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-slate-900">{q.question_text}</p>
+                        <ul className="mt-2 space-y-1.5 text-sm text-slate-600">
+                          <li>
+                            <span className="font-medium text-slate-500">A.</span> {q.option_a}
+                          </li>
+                          <li>
+                            <span className="font-medium text-slate-500">B.</span> {q.option_b}
+                          </li>
+                          <li>
+                            <span className="font-medium text-slate-500">C.</span> {q.option_c}
+                          </li>
+                          <li>
+                            <span className="font-medium text-slate-500">D.</span> {q.option_d}
+                          </li>
+                        </ul>
+                        <p className="mt-2 text-xs text-slate-500">
+                          Correct:{" "}
+                          <span className="font-medium text-green-700">{q.correct_answer}</span>
+                          {q.marks != null && <> · Marks: {q.marks}</>}
+                          {q.negative_marks != null && q.negative_marks !== 0 && (
+                            <> · Negative: {q.negative_marks}</>
+                          )}
+                          {q.difficulty_level && <> · {q.difficulty_level}</>}
+                        </p>
+                        {q.explanation && (
+                          <p className="mt-1.5 text-xs text-slate-500 italic">
+                            Explanation: {q.explanation}
+                          </p>
+                        )}
+                      </div>
+                      {quizIdProp && onEditQuestion && onDeleteQuestion && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => onEditQuestion(q)}
+                            className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+                            aria-label="Edit question"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDeleteQuestion(q)}
+                            className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 text-slate-600 hover:bg-red-100 hover:text-red-600 transition-colors"
+                            aria-label="Delete question"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 function LessonContent({
   lesson,
+  quiz = null,
+  questions = [],
   onLessonContentUpdated,
+  onQuestionsUpdated,
+  createdQuizId = null,
+  onCreateQuizClick,
+  onAddQuestionClick,
+  onEditQuestion,
+  onDeleteQuestion,
+  onEditQuiz,
+  onDeleteQuiz,
+  quizId: quizIdProp = null,
 }: {
   lesson: LessonAdmin;
+  quiz?: Quiz | null;
+  questions?: QuizQuestion[];
   onLessonContentUpdated?: () => void;
+  onQuestionsUpdated?: () => void;
+  createdQuizId?: string | null;
+  onCreateQuizClick?: () => void;
+  onAddQuestionClick?: () => void;
+  onEditQuestion?: (question: QuizQuestion) => void;
+  onDeleteQuestion?: (question: QuizQuestion) => void;
+  onEditQuiz?: (quiz: Quiz) => void;
+  onDeleteQuiz?: (quiz: Quiz) => void;
+  quizId?: string | null;
 }) {
   const [deleting, setDeleting] = useState(false);
   const hasContentUrl = !!lesson.content_url?.trim();
+  const quizId = lesson.quiz_id ?? lesson.content_id ?? createdQuizId ?? null;
+  const isQuiz = lesson.content_type === "quiz";
+  const hasQuiz = !!quizId;
 
   const handleDeleteVideo = useCallback(async () => {
     if (!lesson.id || deleting) return;
@@ -801,7 +1326,7 @@ function LessonContent({
               </button>
             </div>
           </>
-        ) : lesson.content_uploaded ? (
+        ) : lesson.content_uploaded && !isQuiz ? (
           <div className="flex flex-wrap items-center justify-center gap-4">
             <p className="text-sm text-slate-600">
               Content ready ({lesson.content_type}). Player or viewer would render here.
@@ -823,6 +1348,114 @@ function LessonContent({
               </button>
             )}
           </div>
+        ) : isQuiz ? (
+          <div className="flex flex-col w-full max-w-3xl mx-auto gap-6 py-6">
+            {!hasQuiz ? (
+              <>
+                <p className="text-sm text-slate-600 text-center max-w-md">
+                  No quiz has been created for this lesson yet. Create a quiz to add questions.
+                </p>
+                <button
+                  type="button"
+                  onClick={onCreateQuizClick}
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  Create Quiz
+                </button>
+              </>
+            ) : (
+              <>
+                {quiz && (
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                    <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-100">
+                      <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                        Quiz details
+                      </p>
+                    </div>
+                    <div className="p-4 text-left relative group">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-semibold text-slate-900">{quiz.title}</h3>
+                          {quiz.description && (
+                            <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
+                              {quiz.description}
+                            </p>
+                          )}
+                          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-slate-500">
+                            <span className="font-medium text-slate-600">Type:</span>
+                            <span>{quiz.quiz_type}</span>
+                            {quiz.time_limit_minutes != null && (
+                              <>
+                                <span className="font-medium text-slate-600">Time:</span>
+                                <span>{quiz.time_limit_minutes} min</span>
+                              </>
+                            )}
+                            <span className="font-medium text-slate-600">Pass:</span>
+                            <span>{quiz.passing_percentage}%</span>
+                            <span className="font-medium text-slate-600">Max attempts:</span>
+                            <span>{quiz.max_attempts}</span>
+                            <span
+                              className={
+                                quiz.is_published
+                                  ? "text-green-600 font-medium"
+                                  : "text-amber-600 font-medium"
+                              }
+                            >
+                              {quiz.is_published ? "Published" : "Draft"}
+                            </span>
+                          </div>
+                        </div>
+                        {onEditQuiz && onDeleteQuiz && (
+                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={() => onEditQuiz(quiz)}
+                              className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+                              aria-label="Edit quiz"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDeleteQuiz(quiz)}
+                              className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-100 text-slate-600 hover:bg-red-100 hover:text-red-600 transition-colors"
+                              aria-label="Delete quiz"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {questions.length > 0 && (
+                  <QuizQuestionsAccordion
+                    questions={questions}
+                    quizIdProp={quizIdProp ?? null}
+                    onEditQuestion={onEditQuestion}
+                    onDeleteQuestion={onDeleteQuestion}
+                  />
+                )}
+                <div className="flex flex-col items-center gap-2 pt-2">
+                  <p className="text-sm text-slate-600 text-center">
+                    {questions.length > 0
+                      ? "Add more questions below."
+                      : "Quiz is ready. Add multiple choice questions below."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onAddQuestionClick}
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    Add Question
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         ) : lesson.content_type === "video" ? (
           <VideoUploader
             lessonId={lesson.id}
@@ -833,11 +1466,7 @@ function LessonContent({
           />
         ) : (
           <FileUpload
-            accept={
-              lesson.content_type === "quiz"
-                ? { "application/pdf": [] }
-                : { "application/pdf": [], "video/mp4": [], "video/webm": [] }
-            }
+            accept={{ "application/pdf": [], "video/mp4": [], "video/webm": [] }}
             onChange={(files) => {
               if (files.length > 0) {
                 toast.success(`Selected: ${files[0].name}`);
